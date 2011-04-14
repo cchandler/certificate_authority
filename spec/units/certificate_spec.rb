@@ -11,12 +11,16 @@ describe CertificateAuthority::Certificate do
     end
     
     it "should only be a signing entity if it's identified as a CA" do
-      @certificate.is_signing_entity?.should be_true
-      @certificate.signing_entity = false
       @certificate.is_signing_entity?.should be_false
+      @certificate.signing_entity = true
+      @certificate.is_signing_entity?.should be_true
     end
     
     describe "Root certificates" do
+      before(:each) do
+        @certificate.signing_entity = true
+      end
+      
       it "should be able to be identified as a root certificate" do
         @certificate.is_root_entity?.should be_true
       end
@@ -33,17 +37,28 @@ describe CertificateAuthority::Certificate do
         @certificate.subject.common_name = "chrischandler.name"
         @certificate.key_material.generate_key
         @certificate.sign!
+        cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
+        cert.subject.to_s.should == cert.issuer.to_s
       end
       
+      it "should have the basicContraint CA:TRUE" do
+        @certificate.subject.common_name = "chrischandler.name"
+        @certificate.key_material.generate_key
+        @certificate.sign!
+        cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
+        cert.extensions.first.value.should == "CA:TRUE"
+      end
     end
     
     describe "Intermediate certificates" do
       before(:each) do
         @different_cert = CertificateAuthority::Certificate.new
+        @different_cert.signing_entity = true
         @different_cert.subject.common_name = "chrischandler.name root"
         @different_cert.key_material.generate_key
         @different_cert.sign! #self-signed
         @certificate.parent = @different_cert
+        @certificate.signing_entity = true
       end
       
       it "should be able to be identified as an intermediate certificate" do
@@ -62,11 +77,51 @@ describe CertificateAuthority::Certificate do
       it "should correctly be signed by a parent certificate" do
         @certificate.subject.common_name = "chrischandler.name"
         @certificate.key_material.generate_key
+        @certificate.signing_entity = true
         @certificate.sign!
-        print @certificate.to_pem
+        cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
+        cert.subject.to_s.should_not == cert.issuer.to_s
+      end
+      
+      it "should have the basicContraint CA:TRUE" do
+        @certificate.subject.common_name = "chrischandler.name"
+        @certificate.key_material.generate_key
+        @certificate.signing_entity = true
+        @certificate.sign!
+        cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
+        cert.extensions.first.value.should == "CA:TRUE"
       end
       
     end
+    
+    describe "Terminal certificates" do
+      before(:each) do
+        @different_cert = CertificateAuthority::Certificate.new
+        @different_cert.signing_entity = true
+        @different_cert.subject.common_name = "chrischandler.name root"
+        @different_cert.key_material.generate_key
+        @different_cert.sign! #self-signed
+        @certificate.parent = @different_cert
+      end
+      
+      it "should not be identified as an intermediate certificate" do
+        @certificate.is_intermediate_entity?.should be_false
+      end
+      
+      it "should not be identified as a root" do
+        @certificate.is_root_entity?.should be_false
+      end
+      
+      it "should have the basicContraint CA:FALSE" do
+        @certificate.subject.common_name = "chrischandler.name"
+        @certificate.key_material.generate_key
+        @certificate.signing_entity = false
+        @certificate.sign!
+        cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
+        cert.extensions.first.value.should == "CA:FALSE"
+      end
+    end
+    
 
     it "should be able to be identified as a root certificate" do
       @certificate.is_root_entity?.should be_true
@@ -83,8 +138,44 @@ describe CertificateAuthority::Certificate do
     
     it "should have a PEM encoded certificate body available" do
       @certificate.to_pem.should_not be_nil
+      OpenSSL::X509::Certificate.new(@certificate.to_pem).should_not be_nil
     end
   end
+  
+  describe "X.509 V3 Extensions on Signed Certificates" do
+    before(:each) do
+      @certificate = CertificateAuthority::Certificate.new
+      @certificate.subject.common_name = "chrischandler.name"
+      @certificate.key_material.generate_key
+      @certificate.sign!
+    end
+    
+    it "should support BasicContraints" do
+      cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
+      cert.extensions.map(&:oid).include?("basicConstraints").should be_true
+    end
+    
+    it "should support crlDistributionPoints" do
+      cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
+      cert.extensions.map(&:oid).include?("crlDistributionPoints").should be_true
+    end
+    
+    it "should support subjectKeyIdentifier" do
+      cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
+      cert.extensions.map(&:oid).include?("subjectKeyIdentifier").should be_true
+    end
+    
+    it "should support authorityKeyIdentifier" do
+      cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
+      cert.extensions.map(&:oid).include?("authorityKeyIdentifier").should be_true
+    end
+    
+    it "should support authorityInfoAccess" do
+      cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
+      cert.extensions.map(&:oid).include?("authorityInfoAccess").should be_true
+    end
+  end
+  
   
   it "should have a distinguished name" do
     @certificate.distinguished_name.should_not be_nil

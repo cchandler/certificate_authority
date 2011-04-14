@@ -21,7 +21,7 @@ module CertificateAuthority
     end
     
     def is_intermediate_entity?
-      (self.parent != self)
+      (self.parent != self) and @signing_entity
     end
     
   end

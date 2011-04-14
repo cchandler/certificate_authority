@@ -9,6 +9,7 @@ require 'certificate-authority/signing_entity'
 require 'certificate-authority/distinguished_name'
 require 'certificate-authority/serial_number'
 require 'certificate-authority/key_material'
+require 'certificate-authority/extensions'
 require 'certificate-authority/certificate'
 
 module CertificateAuthority
