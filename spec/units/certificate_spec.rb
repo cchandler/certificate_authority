@@ -28,11 +28,21 @@ describe CertificateAuthority::Certificate do
       it "should be a root certificate by default" do
         @certificate.is_root_entity?.should be_true
       end
+      
+      it "should be able to self-sign" do
+        @certificate.subject.common_name = "chrischandler.name"
+        @certificate.key_material.generate_key
+        @certificate.sign!
+      end
+      
     end
     
     describe "Intermediate certificates" do
       before(:each) do
         @different_cert = CertificateAuthority::Certificate.new
+        @different_cert.subject.common_name = "chrischandler.name root"
+        @different_cert.key_material.generate_key
+        @different_cert.sign! #self-signed
         @certificate.parent = @different_cert
       end
       
@@ -48,10 +58,31 @@ describe CertificateAuthority::Certificate do
         @certificate.parent.should_not == @certificate
         @certificate.parent.should_not be_nil
       end
+      
+      it "should correctly be signed by a parent certificate" do
+        @certificate.subject.common_name = "chrischandler.name"
+        @certificate.key_material.generate_key
+        @certificate.sign!
+        print @certificate.to_pem
+      end
+      
     end
 
     it "should be able to be identified as a root certificate" do
       @certificate.is_root_entity?.should be_true
+    end
+  end #End of SigningEntity
+  
+  describe "Signed certificates" do
+    before(:each) do
+      @certificate = CertificateAuthority::Certificate.new
+      @certificate.subject.common_name = "chrischandler.name"
+      @certificate.key_material.generate_key
+      @certificate.sign!
+    end
+    
+    it "should have a PEM encoded certificate body available" do
+      @certificate.to_pem.should_not be_nil
     end
   end
   

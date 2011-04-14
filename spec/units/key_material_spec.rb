@@ -39,7 +39,18 @@ describe CertificateAuthority::KeyMaterial do
     it "should be able to retrieve the public key" do
       @key_material_in_memory.public_key.should_not be_nil
     end
-    
+  end
+  
+  it "not validate without public and private keys" do
+    @key_material.valid?.should be_false
+    @key_material.generate_key
+    @key_material.valid?.should be_true
+    pub = @key_material.public_key
+    @key_material.public_key = nil
+    @key_material.valid?.should be_false
+    @key_material.public_key = pub
+    @key_material.private_key = nil
+    @key_material.valid?.should be_false
   end
   
 end

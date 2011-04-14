@@ -1,5 +1,7 @@
 module CertificateAuthority
   class KeyMaterial
+    include ActiveModel::Validations
+    
     attr_accessor :in_memory
     attr_accessor :keypair
     attr_accessor :private_key
@@ -7,8 +9,16 @@ module CertificateAuthority
     
     def initialize
       self.in_memory = true
+      @errors = ActiveModel::Errors.new(self)
     end
     
+    validates_each :private_key do |record, attr, value|
+        record.errors.add :private_key, "cannot be blank" if record.private_key.nil?
+    end
+    validates_each :public_key do |record, attr, value|
+      record.errors.add :public_key, "cannot be blank" if record.public_key.nil?
+    end
+        
     def is_in_hardware?
       !self.in_memory
     end
@@ -19,8 +29,8 @@ module CertificateAuthority
     
     def generate_key(modulus_bits=1024)
       self.keypair = OpenSSL::PKey::RSA.new(modulus_bits)
-      self.private_key = keypair.to_pem
-      self.public_key = keypair.public_key.to_pem
+      self.private_key = keypair
+      self.public_key = keypair.public_key
       self.keypair
     end
     
