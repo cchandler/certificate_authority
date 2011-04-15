@@ -1,15 +1,31 @@
 module CertificateAuthority
-  class KeyMaterial
+  module KeyMaterial
+    def public_key
+      throw "Required implementation"
+    end
+    
+    def private_key
+      throw "Required implementation"
+    end
+    
+    def is_in_hardware?
+      throw "Required implementation"
+    end
+    
+    def is_in_memory?
+      throw "Required implementation"
+    end
+  end
+  
+  class MemoryKeyMaterial
+    include KeyMaterial
     include ActiveModel::Validations
     
-    attr_accessor :in_memory
     attr_accessor :keypair
     attr_accessor :private_key
     attr_accessor :public_key
     
     def initialize
-      self.in_memory = true
-      @errors = ActiveModel::Errors.new(self)
     end
     
     validates_each :private_key do |record, attr, value|
@@ -20,11 +36,11 @@ module CertificateAuthority
     end
         
     def is_in_hardware?
-      !self.in_memory
+      false
     end
     
     def is_in_memory?
-      self.in_memory
+      true
     end
     
     def generate_key(modulus_bits=1024)
@@ -35,7 +51,6 @@ module CertificateAuthority
     end
     
     def private_key
-      throw "Private key in hardware" if is_in_hardware?
       @private_key
     end
     

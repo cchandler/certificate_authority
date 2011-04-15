@@ -15,6 +15,7 @@ GEM
       git (>= 1.2.5)
       rake
     rake (0.8.7)
+    rcov (0.9.9)
     rspec (2.5.0)
       rspec-core (~> 2.5.0)
       rspec-expectations (~> 2.5.0)
@@ -29,5 +30,6 @@ PLATFORMS
 
 DEPENDENCIES
   activemodel
-  jeweler
+  jeweler (~> 1.5.2)
+  rcov
   rspec

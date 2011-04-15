@@ -24,7 +24,7 @@ module CertificateAuthority
     def initialize
       self.distinguished_name = DistinguishedName.new
       self.serial_number = SerialNumber.new
-      self.key_material = KeyMaterial.new
+      self.key_material = MemoryKeyMaterial.new
       self.not_before = Time.now
       self.not_after = Time.now + 60 * 60 * 24 * 365 #One year
       self.parent = self

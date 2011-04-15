@@ -6,6 +6,11 @@ You can generate root certificates, intermediate certificates, and terminal cert
 
 Because this library is built using the native Ruby bindings for OpenSSL it also supports PKCS#11 cryptographic hardware for secure maintenance of private key materials.
 
+= The important parts
+Coming soon.
+
+= Examples
+
 == Creating a self-signed certificate/root (probably what you want)
 
 	require 'certificate_authority'
@@ -45,13 +50,13 @@ Because this library is built using the native Ruby bindings for OpenSSL it also
 	...
 	certificate.sign!
   certificate.to_pem # <= Returns a PEM formatted string of your certificate
-  certificate.key_material.private_key.to_pem # <= If you need the private key
+  certificate.key_material.private_key.to_pem # <= If you need the private key (and it's in memory)
 
 = Coming Soon
 
 * CRLs
 * OCSP messages
-* PKCS#11 hardware (as soon as I can get some proper 64 bit drivers)
+* More PKCS#11 hardware (I need driver support from the manufacturers)
 * Configurable V3 extensions for all the extended functionality
 
 == Meta

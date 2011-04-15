@@ -9,6 +9,7 @@ require 'certificate_authority/signing_entity'
 require 'certificate_authority/distinguished_name'
 require 'certificate_authority/serial_number'
 require 'certificate_authority/key_material'
+require 'certificate_authority/pkcs11_key_material'
 require 'certificate_authority/extensions'
 require 'certificate_authority/certificate'
 
