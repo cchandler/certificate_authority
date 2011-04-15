@@ -5,12 +5,12 @@ require 'openssl'
 require 'active_model'
 
 #Internal modules
-require 'certificate-authority/signing_entity'
-require 'certificate-authority/distinguished_name'
-require 'certificate-authority/serial_number'
-require 'certificate-authority/key_material'
-require 'certificate-authority/extensions'
-require 'certificate-authority/certificate'
+require 'certificate_authority/signing_entity'
+require 'certificate_authority/distinguished_name'
+require 'certificate_authority/serial_number'
+require 'certificate_authority/key_material'
+require 'certificate_authority/extensions'
+require 'certificate_authority/certificate'
 
 module CertificateAuthority
 end

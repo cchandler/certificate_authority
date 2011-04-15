@@ -20,7 +20,7 @@ begin
     gem.files              = FileList['{bin,lib}/**/*'].to_a
     gem.require_path       = 'lib'
     gem.test_files         = FileList['{spec}/**/{*spec.rb,*helper.rb}'].to_a
-    gem.has_rdoc           = true
+    #gem.has_rdoc           = true
     gem.extra_rdoc_files   = ['README.markdown', 'LICENSE']
 
     gem.add_dependency('activemodel', '3.0.6')
