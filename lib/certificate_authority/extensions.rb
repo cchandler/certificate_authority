@@ -2,11 +2,11 @@ module CertificateAuthority
   module Extensions
     module ExtensionAPI
       def to_s
-        throw "Implementation required"
+        raise "Implementation required"
       end
       
       def openssl_identifier
-        throw "Implementation required"
+        raise "Implementation required"
       end
     end
     

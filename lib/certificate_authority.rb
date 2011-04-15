@@ -13,6 +13,7 @@ require 'certificate_authority/pkcs11_key_material'
 require 'certificate_authority/extensions'
 require 'certificate_authority/certificate'
 require 'certificate_authority/certificate_revocation_list'
+require 'certificate_authority/ocsp_handler'
 
 module CertificateAuthority
 end

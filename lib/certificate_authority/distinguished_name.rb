@@ -23,7 +23,7 @@ module CertificateAuthority
     alias :ou :organizational_unit
     
     def to_x509_name
-      throw "Invalid Distinguished Name" unless valid?
+      raise "Invalid Distinguished Name" unless valid?
       
       # NB: the capitalization in the strings counts
       name = OpenSSL::X509::Name.new

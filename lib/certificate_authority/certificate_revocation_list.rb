@@ -18,13 +18,13 @@ module CertificateAuthority
     end
     
     def <<(cert)
-      throw "Only revoked certificates can be added to a CRL" unless cert.revoked?
+      raise "Only revoked certificates can be added to a CRL" unless cert.revoked?
       self.certificates << cert
     end
     
     def sign!
-      throw "No parent entity has been set!" if self.parent.nil?
-      throw "Invalid CRL" unless self.valid?
+      raise "No parent entity has been set!" if self.parent.nil?
+      raise "Invalid CRL" unless self.valid?
       
       revocations = self.certificates.collect do |certificate|
         revocation = OpenSSL::X509::Revoked.new

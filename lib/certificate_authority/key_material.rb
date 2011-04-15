@@ -1,19 +1,19 @@
 module CertificateAuthority
   module KeyMaterial
     def public_key
-      throw "Required implementation"
+      raise "Required implementation"
     end
     
     def private_key
-      throw "Required implementation"
+      raise "Required implementation"
     end
     
     def is_in_hardware?
-      throw "Required implementation"
+      raise "Required implementation"
     end
     
     def is_in_memory?
-      throw "Required implementation"
+      raise "Required implementation"
     end
   end
   

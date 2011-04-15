@@ -19,6 +19,7 @@ module CertificateAuthority
     validate do |certificate|
       errors.add :base, "Distinguished name must be valid" unless distinguished_name.valid?
       errors.add :base, "Key material name must be valid" unless key_material.valid?
+      errors.add :base, "Serial number must be valid" unless serial_number.valid?
       errors.add :base, "Extensions must be valid" unless extensions.each {|item| item.valid? }
     end
     
@@ -34,13 +35,15 @@ module CertificateAuthority
     end
     
     def sign!
-      throw "Invalid certificate" unless valid?
+      raise "Invalid certificate" unless valid?
       
       openssl_cert = OpenSSL::X509::Certificate.new
       openssl_cert.version    = 2
       openssl_cert.not_before = self.not_before
       openssl_cert.not_after = self.not_after
       openssl_cert.public_key = self.key_material.public_key
+      
+      openssl_cert.serial = self.serial_number.number
       
       openssl_cert.subject = self.distinguished_name.to_x509_name
       openssl_cert.issuer = parent.distinguished_name.to_x509_name
@@ -95,7 +98,7 @@ module CertificateAuthority
     end
     
     def to_pem
-      throw "Certificate has no signed body" if self.openssl_body.nil?
+      raise "Certificate has no signed body" if self.openssl_body.nil?
       self.openssl_body.to_pem
     end
     

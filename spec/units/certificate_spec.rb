@@ -34,6 +34,7 @@ describe CertificateAuthority::Certificate do
       end
       
       it "should be able to self-sign" do
+        @certificate.serial_number.number = 1
         @certificate.subject.common_name = "chrischandler.name"
         @certificate.key_material.generate_key
         @certificate.sign!
@@ -42,6 +43,7 @@ describe CertificateAuthority::Certificate do
       end
       
       it "should have the basicContraint CA:TRUE" do
+        @certificate.serial_number.number = 1
         @certificate.subject.common_name = "chrischandler.name"
         @certificate.key_material.generate_key
         @certificate.sign!
@@ -56,6 +58,7 @@ describe CertificateAuthority::Certificate do
         @different_cert.signing_entity = true
         @different_cert.subject.common_name = "chrischandler.name root"
         @different_cert.key_material.generate_key
+        @different_cert.serial_number.number = 2
         @different_cert.sign! #self-signed
         @certificate.parent = @different_cert
         @certificate.signing_entity = true
@@ -78,6 +81,7 @@ describe CertificateAuthority::Certificate do
         @certificate.subject.common_name = "chrischandler.name"
         @certificate.key_material.generate_key
         @certificate.signing_entity = true
+        @certificate.serial_number.number = 1
         @certificate.sign!
         cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
         cert.subject.to_s.should_not == cert.issuer.to_s
@@ -87,6 +91,7 @@ describe CertificateAuthority::Certificate do
         @certificate.subject.common_name = "chrischandler.name"
         @certificate.key_material.generate_key
         @certificate.signing_entity = true
+        @certificate.serial_number.number = 3
         @certificate.sign!
         cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
         cert.extensions.first.value.should == "CA:TRUE"
@@ -100,6 +105,7 @@ describe CertificateAuthority::Certificate do
         @different_cert.signing_entity = true
         @different_cert.subject.common_name = "chrischandler.name root"
         @different_cert.key_material.generate_key
+        @different_cert.serial_number.number = 1
         @different_cert.sign! #self-signed
         @certificate.parent = @different_cert
       end
@@ -116,6 +122,7 @@ describe CertificateAuthority::Certificate do
         @certificate.subject.common_name = "chrischandler.name"
         @certificate.key_material.generate_key
         @certificate.signing_entity = false
+        @certificate.serial_number.number = 1
         @certificate.sign!
         cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
         cert.extensions.first.value.should == "CA:FALSE"
@@ -133,6 +140,7 @@ describe CertificateAuthority::Certificate do
       @certificate = CertificateAuthority::Certificate.new
       @certificate.subject.common_name = "chrischandler.name"
       @certificate.key_material.generate_key
+      @certificate.serial_number.number = 1
       @certificate.sign!
     end
     
@@ -147,6 +155,7 @@ describe CertificateAuthority::Certificate do
       @certificate = CertificateAuthority::Certificate.new
       @certificate.subject.common_name = "chrischandler.name"
       @certificate.key_material.generate_key
+      @certificate.serial_number.number = 1
       @certificate.sign!
     end
     

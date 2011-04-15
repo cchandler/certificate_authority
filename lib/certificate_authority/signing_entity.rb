@@ -8,7 +8,7 @@ module CertificateAuthority
     end
     
     def signing_entity=(val)
-      throw "invalid param" unless [true,false].include?(val)
+      raise "invalid param" unless [true,false].include?(val)
       @signing_entity = val
     end
     
