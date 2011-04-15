@@ -10,12 +10,12 @@ begin
   require 'jeweler'
 
   Jeweler::Tasks.new do |gem|
-    gem.name = 'certificate-authority'
+    gem.name = 'certificate_authority'
     gem.summary = 'A library for most CA related functionality'
     gem.email = 'chris@flatterline.com'
-    gem.homepage = 'http://github.com/cchandler/certificateauthority'
+    gem.homepage = 'http://github.com/cchandler/certificate_authority'
     gem.authors = ['Chris Chandler']
-    #gem.rubyforge_project = 'remit'
+    gem.rubyforge_project = 'certificate_authority'
     gem.platform           = Gem::Platform::RUBY
     gem.files              = FileList['{bin,lib}/**/*'].to_a
     gem.require_path       = 'lib'
@@ -24,8 +24,6 @@ begin
     gem.extra_rdoc_files   = ['README.markdown', 'LICENSE']
 
     gem.add_dependency('activemodel', '3.0.6')
-    #gem.add_dependency('hpricot', ">=0.8.1")
-    #gem.add_dependency('rest-client', ">=1.4.2")
   end
 rescue LoadError
   puts 'Jeweler not available. Install it with: sudo gem install technicalpickles-jeweler -s http://gems.github.com'
@@ -39,17 +37,14 @@ namespace :spec do
   desc "Run unit specs."
   RSpec::Core::RakeTask.new(:units) do |t|
     t.rspec_opts = ['--colour --format progress']
-    #t.spec_files  = FileList['spec/units/**/*_spec.rb']
   end
 
   desc "Run integration specs. Requires AWS_ACCESS_KEY and AWS_SECRET_KEY."
   RSpec::Core::RakeTask.new(:integrations) do |t|
     t.rspec_opts   = ['--colour --format progress']
-    #t.spec_files  = FileList['spec/integrations/**/*_spec.rb']
   end
 end
 
 RSpec::Core::RakeTask.new(:doc) do |t|
   t.rspec_opts   = ['--format specdoc --dry-run --colour']
-  #t.spec_files  = FileList['spec/**/*_spec.rb']
 end
