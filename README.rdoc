@@ -1,0 +1,51 @@
+= CertificateAuthority - Because it shouldn't be this damned complicated
+
+This is meant to provide a programmer-friendly implementation of all the basic functionality contained in RFC-3280 to implement your own certificate authority.
+
+You can generate root certificates, intermediate certificates, and terminal certificates.  You can also generate/manage Certificate Revocation Lists (CRLs) and Online Certificate Status Protocol (OCSP) messages.
+
+Because this library is built using the native Ruby bindings for OpenSSL it also supports PKCS#11 cryptographic hardware for secure maintenance of private key materials.
+
+== Creating a self-signed root
+
+	require 'certificate_authority'
+	root = CertificateAuthority::Certificate.new
+	root.subject.common_name "http://mydomain.com"
+	root.key_material.generate_key
+	root.signing_entity = true
+	root.sign!
+	
+== Creating an intermediate certificate
+
+	require 'certificate_authority'
+	root = CertificateAuthority::Certificate.new
+	root.subject.common_name "My snazzy root!"
+	root.key_material.generate_key
+	root.signing_entity = true
+	root.sign!
+	
+	intermediate = CertificateAuthority::Certificate.new
+	intermediate.subject.common_name "My snazzy intermediate!"
+	intermediate.key_material.generate_key
+	intermediate.signing_entity = true
+	intermediate.parent = root
+	intermediate.sign!
+	
+== Creating a terminal (non-signing) cert
+
+  require 'certificate_authority'
+	plain_cert = CertificateAuthority::Certificate.new
+	plain_cert.subject.common_name "http://mydomain.com"
+	plain_cert.key_material.generate_key
+	plain_cert.parent = root # or intermediate
+	plain_cert.sign!
+
+== Meta
+
+Written by Chris Chandler(http://chrischandler.name) of Flatterline(http://flatterline.com)
+
+Released under the MIT License: http://www.opensource.org/licenses/mit-license.php
+
+Main page: http://github.com/cchandler/certificateauthority
+
+Issue tracking: https://github.com/cchandler/certificateauthority/issues

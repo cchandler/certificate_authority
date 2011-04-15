@@ -13,7 +13,7 @@ begin
     gem.name = 'certificate-authority'
     gem.summary = 'A library for most CA related functionality'
     gem.email = 'chris@flatterline.com'
-    gem.homepage = 'http://github.com/cchandler/flexpay'
+    gem.homepage = 'http://github.com/cchandler/certificateauthority'
     gem.authors = ['Chris Chandler']
     #gem.rubyforge_project = 'remit'
     gem.platform           = Gem::Platform::RUBY
@@ -23,6 +23,7 @@ begin
     gem.has_rdoc           = true
     gem.extra_rdoc_files   = ['README.markdown', 'LICENSE']
 
+    gem.add_dependency('activemodel', '3.0.6')
     #gem.add_dependency('hpricot', ">=0.8.1")
     #gem.add_dependency('rest-client', ">=1.4.2")
   end

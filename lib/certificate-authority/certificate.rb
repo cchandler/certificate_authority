@@ -1,7 +1,6 @@
 module CertificateAuthority
   class Certificate
     include SigningEntity
-    
     include ActiveModel::Validations
     
     attr_accessor :distinguished_name
@@ -70,6 +69,15 @@ module CertificateAuthority
       
       authority_info_access = CertificateAuthority::Extensions::AuthorityInfoAccess.new
       self.extensions << authority_info_access
+      
+      key_usage = CertificateAuthority::Extensions::KeyUsage.new
+      self.extensions << key_usage
+      
+      extended_key_usage = CertificateAuthority::Extensions::ExtendedKeyUsage.new
+      self.extensions << extended_key_usage
+      
+      subject_alternative_name = CertificateAuthority::Extensions::SubjectAlternativeName.new
+      self.extensions << subject_alternative_name
       
       self.extensions.each do |e|
         ext = factory.create_ext(e.openssl_identifier, e.to_s)

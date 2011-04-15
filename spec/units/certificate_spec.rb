@@ -174,6 +174,21 @@ describe CertificateAuthority::Certificate do
       cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
       cert.extensions.map(&:oid).include?("authorityInfoAccess").should be_true
     end
+    
+    it "should support keyUsage" do
+      cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
+      cert.extensions.map(&:oid).include?("keyUsage").should be_true
+    end
+    
+    it "should support extendedKeyUsage" do
+      cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
+      cert.extensions.map(&:oid).include?("extendedKeyUsage").should be_true
+    end
+    
+    it "should support subjectAlternativeName" do
+      cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
+      cert.extensions.map(&:oid).include?("subjectAltName").should be_true
+    end
   end
   
   

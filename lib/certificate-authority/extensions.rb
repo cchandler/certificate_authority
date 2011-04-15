@@ -76,5 +76,39 @@ module CertificateAuthority
         "OCSP;URI:http://youFillThisOut/ocsp/"
       end
     end
+    
+    class KeyUsage
+      include ExtensionAPI
+      def openssl_identifier
+        "keyUsage"
+      end
+      
+      def to_s
+        "digitalSignature,nonRepudiation"
+      end
+    end
+    
+    class ExtendedKeyUsage
+      include ExtensionAPI
+      def openssl_identifier
+        "extendedKeyUsage"
+      end
+      
+      def to_s
+        "serverAuth,clientAuth"
+      end
+    end
+    
+    class SubjectAlternativeName
+      include ExtensionAPI
+      def openssl_identifier
+        "subjectAltName"
+      end
+      
+      def to_s
+        "URI:http://subdomains.youFillThisOut/"
+      end
+    end
+    
   end
 end
