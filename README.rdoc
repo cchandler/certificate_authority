@@ -47,6 +47,13 @@ Because this library is built using the native Ruby bindings for OpenSSL it also
   certificate.to_pem # <= Returns a PEM formatted string of your certificate
   certificate.key_material.private_key.to_pem # <= If you need the private key
 
+= Coming Soon
+
+* CRLs
+* OCSP messages
+* PKCS#11 hardware (as soon as I can get some proper 64 bit drivers)
+* Configurable V3 extensions for all the extended functionality
+
 == Meta
 
 Written by Chris Chandler(http://chrischandler.name) of Flatterline(http://flatterline.com)
