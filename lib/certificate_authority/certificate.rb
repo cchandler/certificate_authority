@@ -8,6 +8,7 @@ module CertificateAuthority
     attr_accessor :key_material
     attr_accessor :not_before
     attr_accessor :not_after
+    attr_accessor :revoked_at
     attr_accessor :extensions
     attr_accessor :openssl_body
     
@@ -87,6 +88,10 @@ module CertificateAuthority
       digest = OpenSSL::Digest::Digest.new("SHA512")
       self.openssl_body = openssl_cert.sign(parent.key_material.private_key,digest)
       self.openssl_body
+    end
+    
+    def revoked?
+      !self.revoked_at.nil?
     end
     
     def to_pem

@@ -225,4 +225,10 @@ describe CertificateAuthority::Certificate do
     @certificate.not_after.should > Time.now + 55 * 60 * 24 * 365
   end
   
+  it "should be able to have a revoked at time" do
+    @certificate.revoked?.should be_false
+    @certificate.revoked_at = Time.now
+    @certificate.revoked?.should be_true
+  end
+  
 end

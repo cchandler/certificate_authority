@@ -12,6 +12,7 @@ require 'certificate_authority/key_material'
 require 'certificate_authority/pkcs11_key_material'
 require 'certificate_authority/extensions'
 require 'certificate_authority/certificate'
+require 'certificate_authority/certificate_revocation_list'
 
 module CertificateAuthority
 end
