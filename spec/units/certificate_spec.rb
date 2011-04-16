@@ -10,7 +10,7 @@ describe CertificateAuthority::Certificate do
       @certificate.respond_to?(:is_signing_entity?).should be_true
     end
     
-    it "should only be a signing entity if it's identified as a CA" do
+    it "should only be a signing entity if it's identified as a CA", :rfc3280 => true do
       @certificate.is_signing_entity?.should be_false
       @certificate.signing_entity = true
       @certificate.is_signing_entity?.should be_true
@@ -25,7 +25,7 @@ describe CertificateAuthority::Certificate do
         @certificate.is_root_entity?.should be_true
       end
       
-      it "should only be a root certificate if the parent entity is itself" do
+      it "should only be a root certificate if the parent entity is itself", :rfc3280 => true do
         @certificate.parent.should == @certificate
       end
       
@@ -48,7 +48,8 @@ describe CertificateAuthority::Certificate do
         @certificate.key_material.generate_key
         @certificate.sign!
         cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
-        cert.extensions.first.value.should == "CA:TRUE"
+        cert.extensions.map{|i| [i.oid,i.value] }.select{|i| i.first == "basicConstraints"}.first[1].should == "CA:TRUE"
+        # cert.extensions.first.value.should == "CA:TRUE"
       end
     end
     
@@ -94,7 +95,8 @@ describe CertificateAuthority::Certificate do
         @certificate.serial_number.number = 3
         @certificate.sign!
         cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
-        cert.extensions.first.value.should == "CA:TRUE"
+        # cert.extensions.first.value.should == "CA:TRUE"
+        cert.extensions.map{|i| [i.oid,i.value] }.select{|i| i.first == "basicConstraints"}.first[1].should == "CA:TRUE"
       end
       
     end
@@ -125,7 +127,8 @@ describe CertificateAuthority::Certificate do
         @certificate.serial_number.number = 1
         @certificate.sign!
         cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
-        cert.extensions.first.value.should == "CA:FALSE"
+        # cert.extensions.first.value.should == "CA:FALSE"
+        cert.extensions.map{|i| [i.oid,i.value] }.select{|i| i.first == "basicConstraints"}.first[1].should == "CA:FALSE"
       end
     end
     
@@ -198,6 +201,13 @@ describe CertificateAuthority::Certificate do
       cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
       cert.extensions.map(&:oid).include?("subjectAltName").should be_true
     end
+    
+    it "should support certificatePolicies" do
+      cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
+      cert.extensions.map(&:oid).include?("certificatePolicies").should be_true
+      print @certificate.to_pem
+    end
+    
   end
   
   

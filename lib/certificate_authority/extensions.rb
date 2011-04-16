@@ -5,6 +5,10 @@ module CertificateAuthority
         raise "Implementation required"
       end
       
+      def config_extensions
+        {}
+      end
+      
       def openssl_identifier
         raise "Implementation required"
       end
@@ -107,6 +111,24 @@ module CertificateAuthority
       
       def to_s
         "URI:http://subdomains.youFillThisOut/"
+      end
+    end
+    
+    class CertificatePolicies
+      include ExtensionAPI
+      def openssl_identifier
+        "certificatePolicies"
+      end
+      
+      def config_extensions
+        {
+          "custom_policies" => {"policyIdentifier"=>"1.3.5.8", "CPS.1"=>"http://my.host.name/;", "CPS.2"=>"http://my.your.name/;", "userNotice.1"=>"@notice"},
+          "notice" => {"explicitText" => "Explicit Text Here", "organization" => "Organization name", "noticeNumbers" => "1,2,3,4"}
+        }
+      end
+      
+      def to_s
+        "ia5org,@custom_policies"
       end
     end
     

@@ -48,15 +48,9 @@ module CertificateAuthority
       openssl_cert.subject = self.distinguished_name.to_x509_name
       openssl_cert.issuer = parent.distinguished_name.to_x509_name
       
-      factory = OpenSSL::X509::ExtensionFactory.new
-      factory.subject_certificate = openssl_cert
-      
-      #NB: If the parent doesn't have an SSL body we're making this a self-signed cert
-      if parent.openssl_body.nil?
-        factory.issuer_certificate = openssl_cert
-      else
-        factory.issuer_certificate = parent.openssl_body
-      end
+      require 'tempfile'
+      t = Tempfile.new("bullshit_conf")
+      openssl_config = OpenSSL::Config.new("/tmp/conf")
       
       basic_constraints = CertificateAuthority::Extensions::BasicContraints.new
       basic_constraints.ca = is_signing_entity?
@@ -83,6 +77,22 @@ module CertificateAuthority
       subject_alternative_name = CertificateAuthority::Extensions::SubjectAlternativeName.new
       self.extensions << subject_alternative_name
       
+      certificate_policies = CertificateAuthority::Extensions::CertificatePolicies.new
+      merge_options(openssl_config,certificate_policies)
+      self.extensions << certificate_policies
+      
+      factory = OpenSSL::X509::ExtensionFactory.new
+      factory.subject_certificate = openssl_cert
+      
+      #NB: If the parent doesn't have an SSL body we're making this a self-signed cert
+      if parent.openssl_body.nil?
+        factory.issuer_certificate = openssl_cert
+      else
+        factory.issuer_certificate = parent.openssl_body
+      end
+      
+      factory.config = openssl_config
+      
       self.extensions.each do |e|
         ext = factory.create_ext(e.openssl_identifier, e.to_s)
         openssl_cert.add_extension(ext)
@@ -102,5 +112,15 @@ module CertificateAuthority
       self.openssl_body.to_pem
     end
     
+    private
+    
+    def merge_options(config,ext)
+      hash = ext.config_extensions
+      hash.keys.each do |k|
+        config[k] = hash[k]
+      end
+      config
+    end
+      
   end
 end

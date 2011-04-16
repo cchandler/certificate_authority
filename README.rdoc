@@ -54,8 +54,6 @@ Coming soon.
 
 = Coming Soon
 
-* CRLs
-* OCSP messages
 * More PKCS#11 hardware (I need driver support from the manufacturers)
 * Configurable V3 extensions for all the extended functionality
 
