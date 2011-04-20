@@ -27,7 +27,7 @@ Jeweler::Tasks.new do |gem|
   gem.email = "chris@flatterline.com"
   gem.authors = ["Chris Chandler"]
   
-  gem.add_dependency('activemodel', '3.0.6')
+  # gem.add_dependency('activemodel', '3.0.6')
 end
 Jeweler::RubygemsDotOrgTasks.new
 

@@ -40,7 +40,7 @@ module CertificateAuthority
     end
     
     def sign!(signing_profile={})
-      raise "Invalid certificate" unless valid?
+      raise "Invalid certificate #{self.errors.full_messages}" unless valid?
       merge_profile_with_extensions(signing_profile)
       
       openssl_cert = OpenSSL::X509::Certificate.new

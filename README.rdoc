@@ -15,7 +15,8 @@ Coming soon.
 
 	require 'certificate_authority'
 	root = CertificateAuthority::Certificate.new
-	root.subject.common_name "http://mydomain.com"
+	root.subject.common_name= "http://mydomain.com"
+	root.serial_number.number=1
 	root.key_material.generate_key
 	root.signing_entity = true
 	root.sign!
@@ -24,13 +25,15 @@ Coming soon.
 
 	require 'certificate_authority'
 	root = CertificateAuthority::Certificate.new
-	root.subject.common_name "My snazzy root!"
+	root.subject.common_name= "My snazzy root!"
+	root.serial_number.number=1
 	root.key_material.generate_key
 	root.signing_entity = true
 	root.sign!
-	
+
 	intermediate = CertificateAuthority::Certificate.new
-	intermediate.subject.common_name "My snazzy intermediate!"
+	intermediate.subject.common_name= "My snazzy intermediate!"
+	intermediate.serial_number.number=2
 	intermediate.key_material.generate_key
 	intermediate.signing_entity = true
 	intermediate.parent = root
@@ -38,9 +41,10 @@ Coming soon.
 	
 == Creating a terminal (non-signing) cert
 
-  require 'certificate_authority'
+	require 'certificate_authority'
 	plain_cert = CertificateAuthority::Certificate.new
-	plain_cert.subject.common_name "http://mydomain.com"
+	plain_cert.subject.common_name= "http://mydomain.com"
+	plain_cert.serial_number.number=4
 	plain_cert.key_material.generate_key
 	plain_cert.parent = root # or intermediate
 	plain_cert.sign!
@@ -49,8 +53,8 @@ Coming soon.
 
 	...
 	certificate.sign!
-  certificate.to_pem # <= Returns a PEM formatted string of your certificate
-  certificate.key_material.private_key.to_pem # <= If you need the private key (and it's in memory)
+	certificate.to_pem # <= Returns a PEM formatted string of your certificate
+	certificate.key_material.private_key.to_pem # <= If you need the private key (and it's in memory)
 
 = Coming Soon
 
