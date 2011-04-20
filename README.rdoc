@@ -1,17 +1,28 @@
 = CertificateAuthority - Because it shouldn't be this damned complicated
 
-This is meant to provide a programmer-friendly implementation of all the basic functionality contained in RFC-3280 to implement your own certificate authority.
+This is meant to provide a (more) programmer-friendly implementation of all the basic functionality contained in RFC-3280 to implement your own certificate authority.
 
 You can generate root certificates, intermediate certificates, and terminal certificates.  You can also generate/manage Certificate Revocation Lists (CRLs) and Online Certificate Status Protocol (OCSP) messages.
 
 Because this library is built using the native Ruby bindings for OpenSSL it also supports PKCS#11 cryptographic hardware for secure maintenance of private key materials.
 
-= The important parts
-Coming soon.
+= So you want to maintain a certificate authority root
 
-= Examples
+Let's suppose hypothetically you want to be able to issue and manage your own certificates. This section is meant to outline the basic functions you'll need(optionally want) to support.  Not everyone is out to be in total compliance with WebTrust[link:http://www.webtrust.org/] or {Mozilla's rules for CA inclusion}[link:https://wiki.mozilla.org/CA:How_to_apply].
 
-== Creating a self-signed certificate/root (probably what you want)
+The three primary elements to be aware of are:
+
+[Certificate Authority] These are the functions primarily related to the signing, issuance, and revocation of certificates.
+
+[Registration Authority] These are the functions primarily related to registering and requesting certificates and vetting of the entities requesting certification.
+
+[Validation Authority] These are the functions related to verifying the status of certificates out in the wild.  Mostly CRLs and OCSP related functions.
+
+= Establishing a new root in software
+
+Let's look at a complete example for generating a new root certificate. Assuming that you don't have a PKCS#11 hardware token available (lists coming...) we'll have to store this safe.
+
+Generating a self-signed root certificate is fairly easy:
 
 	require 'certificate_authority'
 	root = CertificateAuthority::Certificate.new
@@ -21,15 +32,23 @@ Coming soon.
 	root.signing_entity = true
 	root.sign!
 	
-== Creating an intermediate certificate (much less common use-case)
+The required elements for the gem at this time are a common name for the subject and a serial number for the certificate. Since this is our self-signed root we're going to give it the first serial available of 1. Because certificate_authority is not designed to manage the issuance lifecycle you'll be expected to store serial numbers yourself.
 
-	require 'certificate_authority'
-	root = CertificateAuthority::Certificate.new
-	root.subject.common_name= "My snazzy root!"
-	root.serial_number.number=1
-	root.key_material.generate_key
-	root.signing_entity = true
-	root.sign!
+Next, after taking care of required fields, we will require key material for the new certificate.  There's a convenience method made available on the key_material object for generating new keys.  The private key will be available in:
+
+  root.key_material.private_key
+
+and the public key:
+
+  root.key_material.public_key
+
+Make sure to save the private key somewhere safe!
+
+Lastly, we declare that the certificate we're about to sign is itself a signing entity so we can continue on and sign other certificates.
+
+== Creating a new intermediate
+
+Maybe you don't want to actually sign certificates with your super-secret root certificate. This is actually how a good number of most public certificate authorities do it. Rather than sign with the primary root, they generate an intermediate root that is then responsible for signing the final certificates.  If you wanted to create a root certificate you would do something like the following:
 
 	intermediate = CertificateAuthority::Certificate.new
 	intermediate.subject.common_name= "My snazzy intermediate!"
@@ -39,9 +58,12 @@ Coming soon.
 	intermediate.parent = root
 	intermediate.sign!
 	
-== Creating a terminal (non-signing) cert
+All we have to do is create another certificate like we did with the root. In this example we gave it the next available serial number which for us, was 2.  We then generate (and save!) key material for this new entity.  Even the +signing_entity+ is set to true so this certificate can sign other certificates.  The difference here is that the +parent+ field is set to the root. Going forward, whatever entity you want to sign a certificate, you set that entity to be the parent. In this case, our root will be responsible for signing this intermediate when we call +sign!+.
 
-	require 'certificate_authority'
+= Creating new certificates (in general)
+
+Now that we have a root certificate (and possibly an intermediate) we can sign end-user certificates.  It is, perhaps unsurprisingly, similar to all the others:
+
 	plain_cert = CertificateAuthority::Certificate.new
 	plain_cert.subject.common_name= "http://mydomain.com"
 	plain_cert.serial_number.number=4
@@ -49,12 +71,40 @@ Coming soon.
 	plain_cert.parent = root # or intermediate
 	plain_cert.sign!
 	
-== Getting the certificate body
+That's all there is to it!  In this example we generate the key material ourselves, but it's possible for the end-user to generate certificate signing request (CSR) that we can then parse and consume automatically (coming soon).  To get the PEM formatted certificate for the user you would need to call:
 
-	...
-	certificate.sign!
-	certificate.to_pem # <= Returns a PEM formatted string of your certificate
-	certificate.key_material.private_key.to_pem # <= If you need the private key (and it's in memory)
+  plain_cert.to_pem
+
+to get the certificate body.
+
+= Signing Profiles
+
+Creating basic certificates is all well and good, but maybe you want _more_ signing control.  +certificate_authority+ supports the idea of signing profiles.  These are hashes containing values that +sign!+ will use to merge in additional control options for setting extensions on the certificate.
+
+Here's an example of a full signing profile for most of the common V3 extensions:
+
+	 signing_profile = {
+	   "extensions" => {
+	     "basicConstraints" => {"ca" => false},
+	     "crlDistributionPoints" => {"uri" => "http://notme.com/other.crl" },
+	     "subjectKeyIdentifier" => {},
+	     "authorityKeyIdentifier" => {},
+	     "authorityInfoAccess" => {"ocsp" => ["http://youFillThisOut/ocsp/"] },
+	     "keyUsage" => {"usage" => ["digitalSignature","nonRepudiation"] },
+	     "extendedKeyUsage" => {"usage" => [ "serverAuth","clientAuth"]},
+	     "subjectAltName" => {"uris" => ["http://subdomains.youFillThisOut/"]},
+	     "certificatePolicies" => {
+	     "policy_identifier" => "1.3.5.8", "cps_uris" => ["http://my.host.name/", "http://my.your.name/"], 
+				 "user_notice" => {
+	        "explicit_text" => "Explicit Text Here", 
+				 "organization" => "Organization name",
+				 "notice_numbers" => "1,2,3,4"
+	       }
+	   	}
+	 	}
+	}
+
+
 
 = Coming Soon
 
