@@ -18,6 +18,7 @@ module CertificateAuthority
       include ExtensionAPI
       include ActiveModel::Validations
       attr_accessor :ca
+      attr_accessor :path_len
       validates :ca, :inclusion => [true,false]
       
       def initialize
@@ -28,12 +29,20 @@ module CertificateAuthority
         self.ca
       end
       
+      def path_len=(value)
+        raise "path_len must be a non-negative integer" if value < 0 or !value.is_a?(Fixnum)
+        @path_len = value
+      end
+      
       def openssl_identifier
         "basicConstraints"
       end
       
       def to_s
-        "CA:#{self.ca}"
+        result = ""
+        result += "CA:#{self.ca}"
+        result += ",pathlen:#{self.path_len}" unless self.path_len.nil?
+        result
       end
     end
     
@@ -151,40 +160,89 @@ module CertificateAuthority
         self.uris = []
       end
       
+      def uris=(value)
+        raise "URIs must be an array" unless value.is_a?(Array)
+        @uris = value
+      end
+      
       def openssl_identifier
         "subjectAltName"
       end
       
-      def config_extensions
-        # {"dir_sect" => {"C" => "US", "CN" => "weee.com"}}
-        {}
-      end
-      
       def to_s
-        # entries = self.uris.map {|i| "URI:#{i}"}
-        # return "" if entries.empty?
         if self.uris.empty?
           return ""
         end
         "URI:#{self.uris.join(',URI:')}"
-        # "dirName:dir_sect"
       end
     end
     
     class CertificatePolicies
       include ExtensionAPI
+      
+      attr_accessor :policy_identifier
+      attr_accessor :cps_uris
+      ##User notice
+      attr_accessor :explicit_text
+      attr_accessor :organization
+      attr_accessor :notice_numbers
+      
+      def initialize
+        @contains_data = false
+      end
+      
+      
       def openssl_identifier
         "certificatePolicies"
       end
       
+      def user_notice=(value={})
+        value.keys.each do |key|
+          self.send("#{key}=".to_sym, value[key])
+        end
+      end
+      
       def config_extensions
-        {
-          "custom_policies" => {"policyIdentifier"=>"1.3.5.8", "CPS.1"=>"http://my.host.name/;", "CPS.2"=>"http://my.your.name/;", "userNotice.1"=>"@notice"},
-          "notice" => {"explicitText" => "Explicit Text Here", "organization" => "Organization name", "noticeNumbers" => "1,2,3,4"}
-        }
+        config_extension = {}
+        custom_policies = {}
+        notice = {}
+        unless self.policy_identifier.nil?
+          custom_policies["policyIdentifier"] = self.policy_identifier
+        end
+        
+        if !self.cps_uris.nil? and self.cps_uris.is_a?(Array)
+          self.cps_uris.each_with_index do |cps_uri,i|
+            custom_policies["CPS.#{i}"] = cps_uri
+          end
+        end
+        
+        unless self.explicit_text.nil?
+          notice["explicitText"] = self.explicit_text
+        end
+        
+        unless self.organization.nil?
+          notice["organization"] = self.organization
+        end
+        
+        unless self.notice_numbers.nil?
+          notice["noticeNumbers"] = self.notice_numbers
+        end
+        
+        if notice.keys.size > 0
+          custom_policies["userNotice.1"] = "@notice"
+          config_extension["notice"] = notice
+        end
+        
+        if custom_policies.keys.size > 0
+          config_extension["custom_policies"] = custom_policies
+          @contains_data = true
+        end
+        
+        config_extension
       end
       
       def to_s
+        return "" unless @contains_data
         "ia5org,@custom_policies"
       end
     end

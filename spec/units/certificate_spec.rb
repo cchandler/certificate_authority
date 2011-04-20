@@ -158,8 +158,19 @@ describe CertificateAuthority::Certificate do
       @certificate.subject.common_name = "chrischandler.name"
       @certificate.key_material.generate_key
       @certificate.serial_number.number = 1
-      @policy = {"extensions" => {"subjectAltName" => {"uris" => ["www.chrischandler.name"]}}}
-      @certificate.sign!(@policy)
+      @signing_profile = {
+        "extensions" => {
+          "subjectAltName" => {"uris" => ["www.chrischandler.name"]},
+          "certificatePolicies" => { 
+            "policy_identifier" => "1.3.5.7", 
+            "cps_uris" => ["http://my.host.name/", "http://my.your.name/"],
+            "user_notice" => {
+             "explicit_text" => "Testing!", "organization" => "RSpec Test organization name", "notice_numbers" => "1,2,3,4"
+            }
+          }
+        }
+      }
+      @certificate.sign!(@signing_profile)
     end
     
     describe "SubjectAltName" do
@@ -181,6 +192,51 @@ describe CertificateAuthority::Certificate do
         cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
         cert.extensions.map(&:oid).include?("subjectAltName").should be_false
       end
+    end
+    
+    describe "CertificatePolicies" do
+      before(:each) do
+        @certificate = CertificateAuthority::Certificate.new
+        @certificate.subject.common_name = "chrischandler.name"
+        @certificate.key_material.generate_key
+        @certificate.serial_number.number = 1
+      end
+      
+      it "should have a certificatePolicy if specified" do
+        @certificate.sign!({
+          "extensions" => {
+            "certificatePolicies" => { 
+              "policy_identifier" => "1.3.5.7", 
+              "cps_uris" => ["http://my.host.name/", "http://my.your.name/"]
+            }
+          }
+        })
+        cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
+        cert.extensions.map(&:oid).include?("certificatePolicies").should be_true
+      end
+      
+      it "should contain a nested userNotice if specified" do
+        pending
+        # @certificate.sign!({
+        #   "extensions" => {
+        #     "certificatePolicies" => { 
+        #       "policy_identifier" => "1.3.5.7", 
+        #       "cps_uris" => ["http://my.host.name/", "http://my.your.name/"],
+        #       "user_notice" => {
+        #        "explicit_text" => "Testing!", "organization" => "RSpec Test organization name", "notice_numbers" => "1,2,3,4"
+        #       }
+        #     }
+        #   }
+        # })
+        # cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
+        # cert.extensions.map(&:oid).include?("certificatePolicies").should be_true
+      end
+      
+      it "should NOT include a certificatePolicy if not specified" do
+        @certificate.sign!
+        cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
+        cert.extensions.map(&:oid).include?("certificatePolicies").should be_false
+      end  
     end
     
     
@@ -218,21 +274,16 @@ describe CertificateAuthority::Certificate do
       cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
       cert.extensions.map(&:oid).include?("extendedKeyUsage").should be_true
     end
-    
-    it "should support certificatePolicies" do
-      cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
-      cert.extensions.map(&:oid).include?("certificatePolicies").should be_true
-    end
   end
   
-  describe "Policies" do
+  describe "Signing profile" do
     before(:each) do
       @certificate = CertificateAuthority::Certificate.new
       @certificate.subject.common_name = "chrischandler.name"
       @certificate.key_material.generate_key
       @certificate.serial_number.number = 1
       
-      @policy = {
+      @signing_profile = {
         "extensions" => {
           "basicConstraints" => {"ca" => false},
           "crlDistributionPoints" => {"uri" => "http://notme.com/other.crl" },
@@ -242,9 +293,9 @@ describe CertificateAuthority::Certificate do
           "keyUsage" => {"usage" => ["digitalSignature","nonRepudiation"] },
           "extendedKeyUsage" => {"usage" => [ "serverAuth","clientAuth"]},
           "subjectAltName" => {"uris" => ["http://subdomains.youFillThisOut/"]},
-          "CertificatePolicies" => {
-          "policy_identifier" => "1.3.5.8", "cps" => ["http://my.host.name/", "http://my.your.name/"], "userNotice" => {
-             "explicitText" => "Explicit Text Here", "organization" => "Organization name", "noticeNumbers" => "1,2,3,4"
+          "certificatePolicies" => {
+          "policy_identifier" => "1.3.5.8", "cps_uris" => ["http://my.host.name/", "http://my.your.name/"], "user_notice" => {
+             "explicit_text" => "Explicit Text Here", "organization" => "Organization name", "notice_numbers" => "1,2,3,4"
           }
         }
       }
@@ -252,7 +303,7 @@ describe CertificateAuthority::Certificate do
     end
     
     it "should be able to sign with an optional policy hash" do
-      @certificate.sign!(@policy)
+      @certificate.sign!(@signing_profile)
     end
     
   end

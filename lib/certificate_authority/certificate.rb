@@ -39,9 +39,9 @@ module CertificateAuthority
       
     end
     
-    def sign!(policy={})
+    def sign!(signing_profile={})
       raise "Invalid certificate" unless valid?
-      merge_policy_with_extensions(policy)
+      merge_profile_with_extensions(signing_profile)
       
       openssl_cert = OpenSSL::X509::Certificate.new
       openssl_cert.version    = 2
@@ -55,8 +55,8 @@ module CertificateAuthority
       openssl_cert.issuer = parent.distinguished_name.to_x509_name
       
       require 'tempfile'
-      # t = Tempfile.new("bullshit_conf")
-      t = File.new("/tmp/openssl.cnf")
+      t = Tempfile.new("bullshit_conf")
+      # t = File.new("/tmp/openssl.cnf")
       ## The config requires a file even though we won't use it
       openssl_config = OpenSSL::Config.new(t.path)
       
@@ -119,16 +119,17 @@ module CertificateAuthority
     
     private
     
-    def merge_policy_with_extensions(policy={})
-      return self.extensions if policy["extensions"].nil?
-      policy_config = policy["extensions"]
-      policy_config.keys.each do |k|
+    def merge_profile_with_extensions(signing_profile={})
+      return self.extensions if signing_profile["extensions"].nil?
+      signing_config = signing_profile["extensions"]
+      signing_config.keys.each do |k|
         extension = self.extensions[k]
-        items = policy_config[k]
-        items.keys.each do |policy_item_key|
-          if extension.respond_to?("#{policy_item_key}=".to_sym)
-            # p "Merging #{policy_item_key} with #{items[policy_item_key]}"
-            extension.send("#{policy_item_key}=".to_sym, items[policy_item_key] ) 
+        items = signing_config[k]
+        items.keys.each do |profile_item_key|
+          if extension.respond_to?("#{profile_item_key}=".to_sym)
+            extension.send("#{profile_item_key}=".to_sym, items[profile_item_key] ) 
+          else
+            p "Tried applying '#{profile_item_key}' to #{extension.class} but it doesn't respond!"
           end
         end
       end
