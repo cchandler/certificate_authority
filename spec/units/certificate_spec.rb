@@ -49,7 +49,6 @@ describe CertificateAuthority::Certificate do
         @certificate.sign!
         cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
         cert.extensions.map{|i| [i.oid,i.value] }.select{|i| i.first == "basicConstraints"}.first[1].should == "CA:TRUE"
-        # cert.extensions.first.value.should == "CA:TRUE"
       end
     end
     
@@ -134,7 +133,7 @@ describe CertificateAuthority::Certificate do
     
 
     it "should be able to be identified as a root certificate" do
-      @certificate.is_root_entity?.should be_true
+      @certificate.respond_to?(:is_root_entity?).should be_true
     end
   end #End of SigningEntity
   
@@ -159,8 +158,31 @@ describe CertificateAuthority::Certificate do
       @certificate.subject.common_name = "chrischandler.name"
       @certificate.key_material.generate_key
       @certificate.serial_number.number = 1
-      @certificate.sign!
+      @policy = {"extensions" => {"subjectAltName" => {"uris" => ["www.chrischandler.name"]}}}
+      @certificate.sign!(@policy)
     end
+    
+    describe "SubjectAltName" do
+      before(:each) do
+        @certificate = CertificateAuthority::Certificate.new
+        @certificate.subject.common_name = "chrischandler.name"
+        @certificate.key_material.generate_key
+        @certificate.serial_number.number = 1
+      end
+      
+      it  "should have a subjectAltName if specified" do
+        @certificate.sign!({"extensions" => {"subjectAltName" => {"uris" => ["www.chrischandler.name"]}}})
+        cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
+        cert.extensions.map(&:oid).include?("subjectAltName").should be_true
+      end
+      
+      it "should NOT have a subjectAltName if one was not specified" do
+        @certificate.sign!
+        cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
+        cert.extensions.map(&:oid).include?("subjectAltName").should be_false
+      end
+    end
+    
     
     it "should support BasicContraints" do
       cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
@@ -197,15 +219,40 @@ describe CertificateAuthority::Certificate do
       cert.extensions.map(&:oid).include?("extendedKeyUsage").should be_true
     end
     
-    it "should support subjectAlternativeName" do
-      cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
-      cert.extensions.map(&:oid).include?("subjectAltName").should be_true
-    end
-    
     it "should support certificatePolicies" do
       cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
       cert.extensions.map(&:oid).include?("certificatePolicies").should be_true
-      print @certificate.to_pem
+    end
+  end
+  
+  describe "Policies" do
+    before(:each) do
+      @certificate = CertificateAuthority::Certificate.new
+      @certificate.subject.common_name = "chrischandler.name"
+      @certificate.key_material.generate_key
+      @certificate.serial_number.number = 1
+      
+      @policy = {
+        "extensions" => {
+          "basicConstraints" => {"ca" => false},
+          "crlDistributionPoints" => {"uri" => "http://notme.com/other.crl" },
+          "subjectKeyIdentifier" => {},
+          "authorityKeyIdentifier" => {},
+          "authorityInfoAccess" => {"ocsp" => ["http://youFillThisOut/ocsp/"] },
+          "keyUsage" => {"usage" => ["digitalSignature","nonRepudiation"] },
+          "extendedKeyUsage" => {"usage" => [ "serverAuth","clientAuth"]},
+          "subjectAltName" => {"uris" => ["http://subdomains.youFillThisOut/"]},
+          "CertificatePolicies" => {
+          "policy_identifier" => "1.3.5.8", "cps" => ["http://my.host.name/", "http://my.your.name/"], "userNotice" => {
+             "explicitText" => "Explicit Text Here", "organization" => "Organization name", "noticeNumbers" => "1,2,3,4"
+          }
+        }
+      }
+    }
+    end
+    
+    it "should be able to sign with an optional policy hash" do
+      @certificate.sign!(@policy)
     end
     
   end

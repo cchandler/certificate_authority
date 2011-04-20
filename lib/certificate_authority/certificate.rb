@@ -1,6 +1,6 @@
 module CertificateAuthority
   class Certificate
-    include SigningEntity
+    # include SigningEntity
     include ActiveModel::Validations
     
     attr_accessor :distinguished_name
@@ -20,7 +20,10 @@ module CertificateAuthority
       errors.add :base, "Distinguished name must be valid" unless distinguished_name.valid?
       errors.add :base, "Key material name must be valid" unless key_material.valid?
       errors.add :base, "Serial number must be valid" unless serial_number.valid?
-      errors.add :base, "Extensions must be valid" unless extensions.each {|item| item.valid? }
+      errors.add :base, "Extensions must be valid" unless extensions.each do |item|
+        return true unless item.respond_to?(:valid?)
+        item.valid?
+      end
     end
     
     def initialize
@@ -30,12 +33,15 @@ module CertificateAuthority
       self.not_before = Time.now
       self.not_after = Time.now + 60 * 60 * 24 * 365 #One year
       self.parent = self
+      self.extensions = load_extensions()
+      
       self.signing_entity = false
-      self.extensions = []
+      
     end
     
-    def sign!
+    def sign!(policy={})
       raise "Invalid certificate" unless valid?
+      merge_policy_with_extensions(policy)
       
       openssl_cert = OpenSSL::X509::Certificate.new
       openssl_cert.version    = 2
@@ -49,37 +55,10 @@ module CertificateAuthority
       openssl_cert.issuer = parent.distinguished_name.to_x509_name
       
       require 'tempfile'
-      t = Tempfile.new("bullshit_conf")
-      openssl_config = OpenSSL::Config.new("/tmp/conf")
-      
-      basic_constraints = CertificateAuthority::Extensions::BasicContraints.new
-      basic_constraints.ca = is_signing_entity?
-      self.extensions << basic_constraints
-      
-      crl_distribution_points = CertificateAuthority::Extensions::CrlDistributionPoints.new
-      self.extensions << crl_distribution_points
-      
-      subject_key_identifier = CertificateAuthority::Extensions::SubjectKeyIdentifier.new
-      self.extensions << subject_key_identifier
-      
-      authority_key_identifier = CertificateAuthority::Extensions::AuthorityKeyIdentifier.new
-      self.extensions << authority_key_identifier
-      
-      authority_info_access = CertificateAuthority::Extensions::AuthorityInfoAccess.new
-      self.extensions << authority_info_access
-      
-      key_usage = CertificateAuthority::Extensions::KeyUsage.new
-      self.extensions << key_usage
-      
-      extended_key_usage = CertificateAuthority::Extensions::ExtendedKeyUsage.new
-      self.extensions << extended_key_usage
-      
-      subject_alternative_name = CertificateAuthority::Extensions::SubjectAlternativeName.new
-      self.extensions << subject_alternative_name
-      
-      certificate_policies = CertificateAuthority::Extensions::CertificatePolicies.new
-      merge_options(openssl_config,certificate_policies)
-      self.extensions << certificate_policies
+      # t = Tempfile.new("bullshit_conf")
+      t = File.new("/tmp/openssl.cnf")
+      ## The config requires a file even though we won't use it
+      openssl_config = OpenSSL::Config.new(t.path)
       
       factory = OpenSSL::X509::ExtensionFactory.new
       factory.subject_certificate = openssl_cert
@@ -90,17 +69,35 @@ module CertificateAuthority
       else
         factory.issuer_certificate = parent.openssl_body
       end
+
+      self.extensions.keys.each do |k|
+        config_extensions = extensions[k].config_extensions
+        openssl_config = merge_options(openssl_config,config_extensions)
+      end
+      
+      # p openssl_config.sections
       
       factory.config = openssl_config
       
-      self.extensions.each do |e|
+      self.extensions.keys.each do |k|
+        e = extensions[k]
+        next if e.to_s.nil? or e.to_s == "" ## If the extension returns an empty string we won't include it
         ext = factory.create_ext(e.openssl_identifier, e.to_s)
         openssl_cert.add_extension(ext)
       end
       
       digest = OpenSSL::Digest::Digest.new("SHA512")
       self.openssl_body = openssl_cert.sign(parent.key_material.private_key,digest)
+      t.close! if t.is_a?(Tempfile)# We can get rid of the ridiculous temp file
       self.openssl_body
+    end
+    
+    def is_signing_entity?
+      self.extensions["basicConstraints"].ca
+    end
+    
+    def signing_entity=(signing)
+      self.extensions["basicConstraints"].ca = signing
     end
     
     def revoked?
@@ -112,10 +109,62 @@ module CertificateAuthority
       self.openssl_body.to_pem
     end
     
+    def is_root_entity?
+      self.parent == self && is_signing_entity?
+    end
+    
+    def is_intermediate_entity?
+      (self.parent != self) && is_signing_entity?
+    end
+    
     private
     
-    def merge_options(config,ext)
-      hash = ext.config_extensions
+    def merge_policy_with_extensions(policy={})
+      return self.extensions if policy["extensions"].nil?
+      policy_config = policy["extensions"]
+      policy_config.keys.each do |k|
+        extension = self.extensions[k]
+        items = policy_config[k]
+        items.keys.each do |policy_item_key|
+          if extension.respond_to?("#{policy_item_key}=".to_sym)
+            # p "Merging #{policy_item_key} with #{items[policy_item_key]}"
+            extension.send("#{policy_item_key}=".to_sym, items[policy_item_key] ) 
+          end
+        end
+      end
+    end
+    
+    def load_extensions
+      extension_hash = {}
+      
+      temp_extensions = []
+      basic_constraints = CertificateAuthority::Extensions::BasicContraints.new
+      temp_extensions << basic_constraints
+      crl_distribution_points = CertificateAuthority::Extensions::CrlDistributionPoints.new
+      temp_extensions << crl_distribution_points
+      subject_key_identifier = CertificateAuthority::Extensions::SubjectKeyIdentifier.new
+      temp_extensions << subject_key_identifier
+      authority_key_identifier = CertificateAuthority::Extensions::AuthorityKeyIdentifier.new
+      temp_extensions << authority_key_identifier
+      authority_info_access = CertificateAuthority::Extensions::AuthorityInfoAccess.new
+      temp_extensions << authority_info_access
+      key_usage = CertificateAuthority::Extensions::KeyUsage.new
+      temp_extensions << key_usage
+      extended_key_usage = CertificateAuthority::Extensions::ExtendedKeyUsage.new
+      temp_extensions << extended_key_usage
+      subject_alternative_name = CertificateAuthority::Extensions::SubjectAlternativeName.new
+      temp_extensions << subject_alternative_name
+      certificate_policies = CertificateAuthority::Extensions::CertificatePolicies.new
+      temp_extensions << certificate_policies
+      
+      temp_extensions.each do |extension|
+        extension_hash[extension.openssl_identifier] = extension
+      end
+      
+      extension_hash
+    end
+    
+    def merge_options(config,hash)
       hash.keys.each do |k|
         config[k] = hash[k]
       end

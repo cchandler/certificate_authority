@@ -35,16 +35,33 @@ module CertificateAuthority
       def to_s
         "CA:#{self.ca}"
       end
-    end#Basic Contraints
+    end
     
     class CrlDistributionPoints
       include ExtensionAPI
+      
+      attr_accessor :uri
+      
+      def initialize
+        self.uri = "http://moo.crlendPoint.example.com/something.crl"
+      end
+      
       def openssl_identifier
         "crlDistributionPoints"
       end
       
+      ## NB: At this time it seems OpenSSL's extension handlers don't support
+      ## any of the config options the docs claim to support... everything comes back
+      ## "missing value" on GENERAL NAME. Even if copied verbatim
+      def config_extensions
+        {
+          # "custom_crl_fields" => {"fullname" => "URI:#{fullname}"},
+          # "issuer_sect" => {"CN" => "crlissuer.com", "C" => "US", "O" => "shudder"}
+        }
+      end
+      
       def to_s
-        "URI:http://youFillThisout.com"
+        "URI:#{self.uri}"
       end
     end
     
@@ -61,6 +78,7 @@ module CertificateAuthority
     
     class AuthorityKeyIdentifier
       include ExtensionAPI
+      
       def openssl_identifier
         "authorityKeyIdentifier"
       end
@@ -72,45 +90,84 @@ module CertificateAuthority
     
     class AuthorityInfoAccess
       include ExtensionAPI
+      
+      attr_accessor :ocsp
+      
+      def initialize
+        self.ocsp = []
+      end
+      
       def openssl_identifier
         "authorityInfoAccess"
       end
       
       def to_s
-        "OCSP;URI:http://youFillThisOut/ocsp/"
+        "OCSP;URI:#{self.ocsp}"
       end
     end
     
     class KeyUsage
       include ExtensionAPI
+      
+      attr_accessor :usage
+      
+      def initialize
+        self.usage = ["digitalSignature", "nonRepudiation"]
+      end
+      
       def openssl_identifier
         "keyUsage"
       end
       
       def to_s
-        "digitalSignature,nonRepudiation"
+        "#{self.usage.join(',')}"
       end
     end
     
     class ExtendedKeyUsage
       include ExtensionAPI
+      
+      attr_accessor :usage
+      
+      def initialize
+        self.usage = ["serverAuth","clientAuth"]
+      end
+      
       def openssl_identifier
         "extendedKeyUsage"
       end
       
       def to_s
-        "serverAuth,clientAuth"
+        "#{self.usage.join(',')}"
       end
     end
     
     class SubjectAlternativeName
       include ExtensionAPI
+      
+      attr_accessor :uris
+      
+      def initialize
+        self.uris = []
+      end
+      
       def openssl_identifier
         "subjectAltName"
       end
       
+      def config_extensions
+        # {"dir_sect" => {"C" => "US", "CN" => "weee.com"}}
+        {}
+      end
+      
       def to_s
-        "URI:http://subdomains.youFillThisOut/"
+        # entries = self.uris.map {|i| "URI:#{i}"}
+        # return "" if entries.empty?
+        if self.uris.empty?
+          return ""
+        end
+        "URI:#{self.uris.join(',URI:')}"
+        # "dirName:dir_sect"
       end
     end
     
