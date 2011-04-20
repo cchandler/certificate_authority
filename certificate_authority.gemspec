@@ -20,6 +20,7 @@ Gem::Specification.new do |s|
     "README.rdoc",
     "Rakefile",
     "VERSION.yml",
+    "certificate_authority.gemspec",
     "lib/certificate_authority.rb",
     "lib/certificate_authority/certificate.rb",
     "lib/certificate_authority/certificate_revocation_list.rb",
