@@ -211,7 +211,7 @@ To configure a certificate to utilize PKCS#11 instead of in memory keys all you 
 	root.key_material = key_material_in_hardware
 	root.sign!
 	
-You're current version of OpenSSL _must_ include dynamic engine support and you will need to have OpenSSL PKCS#11 engine support.  You will also require the actual PKCS#11 driver from the hardware manufacturer.  As of today the only tokens I've gotten to work are:
+Your current version of OpenSSL _must_ include dynamic engine support and you will need to have OpenSSL PKCS#11 engine support.  You will also require the actual PKCS#11 driver from the hardware manufacturer.  As of today the only tokens I've gotten to work are:
 
 [eTokenPro] Released by Aladdin (now SafeNet Inc.). I have only had success with the version 4 and 5 (32 bit only) copy of the driver. The newer authentication client released by SafeNet appears to be completely broken for interacting with the tokens outside of SafeNet's own tools. If anyone has a different experience I'd like to hear from you.
 
