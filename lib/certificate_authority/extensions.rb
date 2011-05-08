@@ -111,6 +111,7 @@ module CertificateAuthority
       end
       
       def to_s
+        return "" if self.ocsp.empty?
         "OCSP;URI:#{self.ocsp}"
       end
     end

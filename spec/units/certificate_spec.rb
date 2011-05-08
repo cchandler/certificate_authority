@@ -194,6 +194,23 @@ describe CertificateAuthority::Certificate do
       end
     end
     
+    describe "AuthorityInfoAccess" do
+      before(:each) do
+        @certificate = CertificateAuthority::Certificate.new
+        @certificate.subject.common_name = "chrischandler.name"
+        @certificate.key_material.generate_key
+        @certificate.serial_number.number = 1
+      end
+      
+      it "should have an authority info access if specified" do
+        @certificate.sign!({"extensions" => {"authorityInfoAccess" => {"ocsp" => ["www.chrischandler.name"]}}})
+        cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
+        cert.extensions.map(&:oid).include?("authorityInfoAccess").should be_true
+      end
+      
+    end
+    
+    
     describe "CertificatePolicies" do
       before(:each) do
         @certificate = CertificateAuthority::Certificate.new
@@ -258,11 +275,6 @@ describe CertificateAuthority::Certificate do
     it "should support authorityKeyIdentifier" do
       cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
       cert.extensions.map(&:oid).include?("authorityKeyIdentifier").should be_true
-    end
-    
-    it "should support authorityInfoAccess" do
-      cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
-      cert.extensions.map(&:oid).include?("authorityInfoAccess").should be_true
     end
     
     it "should support keyUsage" do

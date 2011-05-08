@@ -21,8 +21,11 @@ module CertificateAuthority
       errors.add :base, "Key material name must be valid" unless key_material.valid?
       errors.add :base, "Serial number must be valid" unless serial_number.valid?
       errors.add :base, "Extensions must be valid" unless extensions.each do |item|
-        return true unless item.respond_to?(:valid?)
-        item.valid?
+        unless item.respond_to?(:valid?)
+          true 
+        else
+          item.valid?
+        end
       end
     end
     
