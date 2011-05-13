@@ -206,8 +206,28 @@ describe CertificateAuthority::Certificate do
         @certificate.sign!({"extensions" => {"authorityInfoAccess" => {"ocsp" => ["www.chrischandler.name"]}}})
         cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
         cert.extensions.map(&:oid).include?("authorityInfoAccess").should be_true
+      end  
+    end
+    
+    describe "CrlDistributionPoints" do
+      before(:each) do
+        @certificate = CertificateAuthority::Certificate.new
+        @certificate.subject.common_name = "chrischandler.name"
+        @certificate.key_material.generate_key
+        @certificate.serial_number.number = 1
       end
       
+      it "should have a crlDistributionPoint if specified" do
+        @certificate.sign!({"extensions" => {"crlDistributionPoints" => {"uri" => ["http://crlThingy.com"]}}})
+        cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
+        cert.extensions.map(&:oid).include?("crlDistributionPoints").should be_true
+      end
+      
+      it "should NOT have a crlDistributionPoint if one was not specified" do
+        @certificate.sign!
+        cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
+        cert.extensions.map(&:oid).include?("crlDistributionPoints").should be_false
+      end
     end
     
     
@@ -260,11 +280,6 @@ describe CertificateAuthority::Certificate do
     it "should support BasicContraints" do
       cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
       cert.extensions.map(&:oid).include?("basicConstraints").should be_true
-    end
-    
-    it "should support crlDistributionPoints" do
-      cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
-      cert.extensions.map(&:oid).include?("crlDistributionPoints").should be_true
     end
     
     it "should support subjectKeyIdentifier" do

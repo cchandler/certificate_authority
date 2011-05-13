@@ -52,7 +52,7 @@ module CertificateAuthority
       attr_accessor :uri
       
       def initialize
-        self.uri = "http://moo.crlendPoint.example.com/something.crl"
+        # self.uri = "http://moo.crlendPoint.example.com/something.crl"
       end
       
       def openssl_identifier
@@ -70,6 +70,7 @@ module CertificateAuthority
       end
       
       def to_s
+        return "" if self.uri.nil?
         "URI:#{self.uri}"
       end
     end
