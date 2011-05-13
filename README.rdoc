@@ -30,7 +30,8 @@ Generating a self-signed root certificate is fairly easy:
 	root.serial_number.number=1
 	root.key_material.generate_key
 	root.signing_entity = true
-	root.sign!
+	signing_profile = {"extensions" => {"keyUsage" => {"usage" => ["critical", "keyCertSign"] }} }
+	root.sign!(signing_profile)
 	
 The required elements for the gem at this time are a common name for the subject and a serial number for the certificate. Since this is our self-signed root we're going to give it the first serial available of 1. Because certificate_authority is not designed to manage the issuance lifecycle you'll be expected to store serial numbers yourself.
 
@@ -56,7 +57,8 @@ Maybe you don't want to actually sign certificates with your super-secret root c
 	intermediate.key_material.generate_key
 	intermediate.signing_entity = true
 	intermediate.parent = root
-	intermediate.sign!
+	signing_profile = {"extensions" => {"keyUsage" => {"usage" => ["critical", "keyCertSign"] }} }
+	intermediate.sign!(signing_profile)
 	
 All we have to do is create another certificate like we did with the root. In this example we gave it the next available serial number which for us, was 2.  We then generate (and save!) key material for this new entity.  Even the +signing_entity+ is set to true so this certificate can sign other certificates.  The difference here is that the +parent+ field is set to the root. Going forward, whatever entity you want to sign a certificate, you set that entity to be the parent. In this case, our root will be responsible for signing this intermediate when we call +sign!+.
 
@@ -224,7 +226,7 @@ Also of note, I have gotten these to work with 32-bit copies of Ubuntu 10.10 and
 = Coming Soon
 
 * More PKCS#11 hardware (I need driver support from the manufacturers)
-* Configurable V3 extensions for all the extended functionality
+* Support for working with CSRs to request & issue certificates
 
 == Meta
 
@@ -232,6 +234,6 @@ Written by Chris Chandler(http://chrischandler.name) of Flatterline(http://flatt
 
 Released under the MIT License: http://www.opensource.org/licenses/mit-license.php
 
-Main page: http://github.com/cchandler/certificateauthority
+Main page: http://github.com/cchandler/certificate_authority
 
-Issue tracking: https://github.com/cchandler/certificateauthority/issues
+Issue tracking: https://github.com/cchandler/certificate_authority/issues
