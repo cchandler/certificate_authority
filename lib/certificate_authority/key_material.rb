@@ -43,7 +43,7 @@ module CertificateAuthority
       true
     end
     
-    def generate_key(modulus_bits=1024)
+    def generate_key(modulus_bits=2048)
       self.keypair = OpenSSL::PKey::RSA.new(modulus_bits)
       self.private_key = keypair
       self.public_key = keypair.public_key

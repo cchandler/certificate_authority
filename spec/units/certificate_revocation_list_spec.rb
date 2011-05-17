@@ -7,12 +7,12 @@ describe CertificateAuthority::CertificateRevocationList do
     @root_certificate = CertificateAuthority::Certificate.new
     @root_certificate.signing_entity = true
     @root_certificate.subject.common_name = "CRL Root"
-    @root_certificate.key_material.generate_key
+    @root_certificate.key_material.generate_key(1024)
     @root_certificate.serial_number.number = 1
     @root_certificate.sign!
     
     @certificate = CertificateAuthority::Certificate.new
-    @certificate.key_material.generate_key
+    @certificate.key_material.generate_key(1024)
     @certificate.subject.common_name = "http://bogusSite.com"
     @certificate.parent = @root_certificate
     @certificate.serial_number.number = 2

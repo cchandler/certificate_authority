@@ -15,21 +15,21 @@ describe CertificateAuthority::MemoryKeyMaterial do
   end
   
   it "should be able to generate an RSA key" do
-    @key_material.generate_key.should_not be_nil
+    @key_material.generate_key(1024).should_not be_nil
   end
   
   it "should generate a proper OpenSSL::PKey::RSA" do
-    @key_material.generate_key.class.should == OpenSSL::PKey::RSA
+    @key_material.generate_key(1024).class.should == OpenSSL::PKey::RSA
   end
   
   it "should be able to specify the size of the modulus to generate" do
-    @key_material.generate_key(768).should_not be_nil
+    @key_material.generate_key(1024).should_not be_nil
   end
   
   describe "in memory" do
     before(:all) do
       @key_material_in_memory = CertificateAuthority::MemoryKeyMaterial.new
-      @key_material_in_memory.generate_key
+      @key_material_in_memory.generate_key(1024)
     end
     
     it "should be able to retrieve the private key" do
@@ -83,7 +83,7 @@ describe CertificateAuthority::MemoryKeyMaterial do
   
   it "not validate without public and private keys" do
     @key_material.valid?.should be_false
-    @key_material.generate_key
+    @key_material.generate_key(1024)
     @key_material.valid?.should be_true
     pub = @key_material.public_key
     @key_material.public_key = nil

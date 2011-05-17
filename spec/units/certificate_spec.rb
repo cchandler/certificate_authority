@@ -36,7 +36,7 @@ describe CertificateAuthority::Certificate do
       it "should be able to self-sign" do
         @certificate.serial_number.number = 1
         @certificate.subject.common_name = "chrischandler.name"
-        @certificate.key_material.generate_key
+        @certificate.key_material.generate_key(1024)
         @certificate.sign!
         cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
         cert.subject.to_s.should == cert.issuer.to_s
@@ -45,7 +45,7 @@ describe CertificateAuthority::Certificate do
       it "should have the basicContraint CA:TRUE" do
         @certificate.serial_number.number = 1
         @certificate.subject.common_name = "chrischandler.name"
-        @certificate.key_material.generate_key
+        @certificate.key_material.generate_key(1024)
         @certificate.sign!
         cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
         cert.extensions.map{|i| [i.oid,i.value] }.select{|i| i.first == "basicConstraints"}.first[1].should == "CA:TRUE"
@@ -57,7 +57,7 @@ describe CertificateAuthority::Certificate do
         @different_cert = CertificateAuthority::Certificate.new
         @different_cert.signing_entity = true
         @different_cert.subject.common_name = "chrischandler.name root"
-        @different_cert.key_material.generate_key
+        @different_cert.key_material.generate_key(1024)
         @different_cert.serial_number.number = 2
         @different_cert.sign! #self-signed
         @certificate.parent = @different_cert
@@ -79,7 +79,7 @@ describe CertificateAuthority::Certificate do
       
       it "should correctly be signed by a parent certificate" do
         @certificate.subject.common_name = "chrischandler.name"
-        @certificate.key_material.generate_key
+        @certificate.key_material.generate_key(1024)
         @certificate.signing_entity = true
         @certificate.serial_number.number = 1
         @certificate.sign!
@@ -89,7 +89,7 @@ describe CertificateAuthority::Certificate do
       
       it "should have the basicContraint CA:TRUE" do
         @certificate.subject.common_name = "chrischandler.name"
-        @certificate.key_material.generate_key
+        @certificate.key_material.generate_key(1024)
         @certificate.signing_entity = true
         @certificate.serial_number.number = 3
         @certificate.sign!
@@ -105,7 +105,7 @@ describe CertificateAuthority::Certificate do
         @different_cert = CertificateAuthority::Certificate.new
         @different_cert.signing_entity = true
         @different_cert.subject.common_name = "chrischandler.name root"
-        @different_cert.key_material.generate_key
+        @different_cert.key_material.generate_key(1024)
         @different_cert.serial_number.number = 1
         @different_cert.sign! #self-signed
         @certificate.parent = @different_cert
@@ -121,7 +121,7 @@ describe CertificateAuthority::Certificate do
       
       it "should have the basicContraint CA:FALSE" do
         @certificate.subject.common_name = "chrischandler.name"
-        @certificate.key_material.generate_key
+        @certificate.key_material.generate_key(1024)
         @certificate.signing_entity = false
         @certificate.serial_number.number = 1
         @certificate.sign!
@@ -141,7 +141,7 @@ describe CertificateAuthority::Certificate do
     before(:each) do
       @certificate = CertificateAuthority::Certificate.new
       @certificate.subject.common_name = "chrischandler.name"
-      @certificate.key_material.generate_key
+      @certificate.key_material.generate_key(1024)
       @certificate.serial_number.number = 1
       @certificate.sign!
     end
@@ -156,7 +156,7 @@ describe CertificateAuthority::Certificate do
     before(:each) do
       @certificate = CertificateAuthority::Certificate.new
       @certificate.subject.common_name = "chrischandler.name"
-      @certificate.key_material.generate_key
+      @certificate.key_material.generate_key(1024)
       @certificate.serial_number.number = 1
       @signing_profile = {
         "extensions" => {
@@ -177,7 +177,7 @@ describe CertificateAuthority::Certificate do
       before(:each) do
         @certificate = CertificateAuthority::Certificate.new
         @certificate.subject.common_name = "chrischandler.name"
-        @certificate.key_material.generate_key
+        @certificate.key_material.generate_key(1024)
         @certificate.serial_number.number = 1
       end
       
@@ -198,7 +198,7 @@ describe CertificateAuthority::Certificate do
       before(:each) do
         @certificate = CertificateAuthority::Certificate.new
         @certificate.subject.common_name = "chrischandler.name"
-        @certificate.key_material.generate_key
+        @certificate.key_material.generate_key(1024)
         @certificate.serial_number.number = 1
       end
       
@@ -213,7 +213,7 @@ describe CertificateAuthority::Certificate do
       before(:each) do
         @certificate = CertificateAuthority::Certificate.new
         @certificate.subject.common_name = "chrischandler.name"
-        @certificate.key_material.generate_key
+        @certificate.key_material.generate_key(1024)
         @certificate.serial_number.number = 1
       end
       
@@ -235,7 +235,7 @@ describe CertificateAuthority::Certificate do
       before(:each) do
         @certificate = CertificateAuthority::Certificate.new
         @certificate.subject.common_name = "chrischandler.name"
-        @certificate.key_material.generate_key
+        @certificate.key_material.generate_key(1024)
         @certificate.serial_number.number = 1
       end
       
@@ -307,7 +307,7 @@ describe CertificateAuthority::Certificate do
     before(:each) do
       @certificate = CertificateAuthority::Certificate.new
       @certificate.subject.common_name = "chrischandler.name"
-      @certificate.key_material.generate_key
+      @certificate.key_material.generate_key(1024)
       @certificate.serial_number.number = 1
       
       @signing_profile = {
