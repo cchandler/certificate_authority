@@ -29,10 +29,10 @@ module CertificateAuthority
       name = OpenSSL::X509::Name.new
       name.add_entry("CN", common_name)
       name.add_entry("O", organization) unless organization.blank?
-      name.add_entry("OU", common_name) unless organizational_unit.blank?
-      name.add_entry("S", common_name) unless state.blank?
-      name.add_entry("L", common_name) unless locality.blank?
-      
+      name.add_entry("OU", organizational_unit) unless organizational_unit.blank?
+      name.add_entry("ST", state) unless state.blank?
+      name.add_entry("L", locality) unless locality.blank?
+      name.add_entry("C", country) unless country.blank?
       name
     end
   end
