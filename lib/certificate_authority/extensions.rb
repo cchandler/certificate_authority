@@ -156,26 +156,39 @@ module CertificateAuthority
     class SubjectAlternativeName
       include ExtensionAPI
       
-      attr_accessor :uris
+      attr_accessor :uris, :dns_names, :ips
       
       def initialize
         self.uris = []
+        self.dns_names = []
+        self.ips = []
       end
       
       def uris=(value)
         raise "URIs must be an array" unless value.is_a?(Array)
         @uris = value
       end
-      
+
+      def dns_names=(value)
+        raise "DNS names must be an array" unless value.is_a?(Array)
+        @dns_names = value
+      end
+
+      def ips=(value)
+        raise "IPs must be an array" unless value.is_a?(Array)
+        @ips = value
+      end
+
       def openssl_identifier
         "subjectAltName"
       end
       
       def to_s
-        if self.uris.empty?
-          return ""
-        end
-        "URI:#{self.uris.join(',URI:')}"
+        res =  self.uris.map {|u| "URI:#{u}" }
+        res += self.dns_names.map {|d| "DNS:#{d}" }
+        res += self.ips.map {|i| "IP:#{i}" }
+
+        return res.join(',')
       end
     end
     

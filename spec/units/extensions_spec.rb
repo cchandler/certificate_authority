@@ -40,7 +40,7 @@ describe CertificateAuthority::Extensions do
       lambda {subjectAltName.uris = "not an array"}.should raise_error
     end
     
-    it "should generate a proper OpenSSL extension string" do
+    it "should generate a proper OpenSSL extension string for URIs" do
       subjectAltName = CertificateAuthority::Extensions::SubjectAlternativeName.new
       subjectAltName.uris = ["http://localhost.altname.example.com"]
       subjectAltName.to_s.should == "URI:http://localhost.altname.example.com"
@@ -49,5 +49,67 @@ describe CertificateAuthority::Extensions do
       subjectAltName.to_s.should == "URI:http://localhost.altname.example.com,URI:http://other.example.com"
     end
     
+
+    it "should respond to :dns_names" do
+      subjectAltName = CertificateAuthority::Extensions::SubjectAlternativeName.new
+      subjectAltName.respond_to?(:dns_names).should be_true
+    end
+
+    it "should require 'dns_names' to be an Array" do
+      subjectAltName = CertificateAuthority::Extensions::SubjectAlternativeName.new
+      lambda {subjectAltName.dns_names = "not an array"}.should raise_error
+    end
+
+    it "should generate a proper OpenSSL extension string for DNS names" do
+      subjectAltName = CertificateAuthority::Extensions::SubjectAlternativeName.new
+      subjectAltName.dns_names = ["localhost.altname.example.com"]
+      subjectAltName.to_s.should == "DNS:localhost.altname.example.com"
+
+      subjectAltName.dns_names = ["localhost.altname.example.com", "other.example.com"]
+      subjectAltName.to_s.should == "DNS:localhost.altname.example.com,DNS:other.example.com"
+    end
+
+    it "should respond to :ips" do
+      subjectAltName = CertificateAuthority::Extensions::SubjectAlternativeName.new
+      subjectAltName.respond_to?(:ips).should be_true
+    end
+
+    it "should require 'ips' to be an Array" do
+      subjectAltName = CertificateAuthority::Extensions::SubjectAlternativeName.new
+      lambda {subjectAltName.ips = "not an array"}.should raise_error
+    end
+
+    it "should generate a proper OpenSSL extension string for IPs" do
+      subjectAltName = CertificateAuthority::Extensions::SubjectAlternativeName.new
+      subjectAltName.ips = ["1.2.3.4"]
+      subjectAltName.to_s.should == "IP:1.2.3.4"
+
+      subjectAltName.ips = ["1.2.3.4", "5.6.7.8"]
+      subjectAltName.to_s.should == "IP:1.2.3.4,IP:5.6.7.8"
+    end
+
+    it "should generate a proper OpenSSL extension string for URIs IPs and DNS names together" do
+      subjectAltName = CertificateAuthority::Extensions::SubjectAlternativeName.new
+      subjectAltName.ips = ["1.2.3.4"]
+      subjectAltName.to_s.should == "IP:1.2.3.4"
+
+      subjectAltName.dns_names = ["localhost.altname.example.com"]
+      subjectAltName.to_s.should == "DNS:localhost.altname.example.com,IP:1.2.3.4"
+
+      subjectAltName.dns_names = ["localhost.altname.example.com", "other.example.com"]
+      subjectAltName.to_s.should == "DNS:localhost.altname.example.com,DNS:other.example.com,IP:1.2.3.4"
+
+      subjectAltName.ips = ["1.2.3.4", "5.6.7.8"]
+      subjectAltName.to_s.should == "DNS:localhost.altname.example.com,DNS:other.example.com,IP:1.2.3.4,IP:5.6.7.8"
+
+      subjectAltName.uris = ["http://localhost.altname.example.com"]
+      subjectAltName.to_s.should == "URI:http://localhost.altname.example.com,DNS:localhost.altname.example.com,DNS:other.example.com,IP:1.2.3.4,IP:5.6.7.8"
+
+      subjectAltName.uris = ["http://localhost.altname.example.com", "http://other.altname.example.com"]
+      subjectAltName.to_s.should == "URI:http://localhost.altname.example.com,URI:http://other.altname.example.com,DNS:localhost.altname.example.com,DNS:other.example.com,IP:1.2.3.4,IP:5.6.7.8x"
+
+    end
+
+
   end
 end
