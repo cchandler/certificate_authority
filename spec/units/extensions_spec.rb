@@ -106,7 +106,7 @@ describe CertificateAuthority::Extensions do
       subjectAltName.to_s.should == "URI:http://localhost.altname.example.com,DNS:localhost.altname.example.com,DNS:other.example.com,IP:1.2.3.4,IP:5.6.7.8"
 
       subjectAltName.uris = ["http://localhost.altname.example.com", "http://other.altname.example.com"]
-      subjectAltName.to_s.should == "URI:http://localhost.altname.example.com,URI:http://other.altname.example.com,DNS:localhost.altname.example.com,DNS:other.example.com,IP:1.2.3.4,IP:5.6.7.8x"
+      subjectAltName.to_s.should == "URI:http://localhost.altname.example.com,URI:http://other.altname.example.com,DNS:localhost.altname.example.com,DNS:other.example.com,IP:1.2.3.4,IP:5.6.7.8"
 
     end
 
