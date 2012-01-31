@@ -230,7 +230,7 @@ Also of note, I have gotten these to work with 32-bit copies of Ubuntu 10.10 and
 
 = Misc notes
 
-* Firefox will complain about root/intermediate certificates unless both digitalSignature and keyEncipherment are specified as keyUsage attributes.
+* Firefox will complain about root/intermediate certificates unless both digitalSignature and keyEncipherment are specified as keyUsage attributes. Thanks diogomonica
 
 == Meta
 
