@@ -228,6 +228,10 @@ Also of note, I have gotten these to work with 32-bit copies of Ubuntu 10.10 and
 * More PKCS#11 hardware (I need driver support from the manufacturers)
 * Support for working with CSRs to request & issue certificates
 
+= Misc notes
+
+* Firefox will complain about root/intermediate certificates unless both digitalSignature and keyEncipherment are specified as keyUsage attributes.
+
 == Meta
 
 Written by Chris Chandler(http://chrischandler.name)
