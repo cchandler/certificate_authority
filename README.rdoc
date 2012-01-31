@@ -24,15 +24,15 @@ Let's look at a complete example for generating a new root certificate. Assuming
 
 Generating a self-signed root certificate is fairly easy:
 
-	require 'certificate_authority'
-	root = CertificateAuthority::Certificate.new
-	root.subject.common_name= "http://mydomain.com"
-	root.serial_number.number=1
-	root.key_material.generate_key
-	root.signing_entity = true
-	signing_profile = {"extensions" => {"keyUsage" => {"usage" => ["critical", "keyCertSign"] }} }
-	root.sign!(signing_profile)
-	
+  require 'certificate_authority'
+  root = CertificateAuthority::Certificate.new
+  root.subject.common_name= "http://mydomain.com"
+  root.serial_number.number=1
+  root.key_material.generate_key
+  root.signing_entity = true
+  signing_profile = {"extensions" => {"keyUsage" => {"usage" => ["critical", "keyCertSign"] }} }
+  root.sign!(signing_profile)
+
 The required elements for the gem at this time are a common name for the subject and a serial number for the certificate. Since this is our self-signed root we're going to give it the first serial available of 1. Because certificate_authority is not designed to manage the issuance lifecycle you'll be expected to store serial numbers yourself.
 
 Next, after taking care of required fields, we will require key material for the new certificate.  There's a convenience method made available on the key_material object for generating new keys.  The private key will be available in:
@@ -51,28 +51,28 @@ Lastly, we declare that the certificate we're about to sign is itself a signing 
 
 Maybe you don't want to actually sign certificates with your super-secret root certificate. This is actually how a good number of most public certificate authorities do it. Rather than sign with the primary root, they generate an intermediate root that is then responsible for signing the final certificates.  If you wanted to create a root certificate you would do something like the following:
 
-	intermediate = CertificateAuthority::Certificate.new
-	intermediate.subject.common_name= "My snazzy intermediate!"
-	intermediate.serial_number.number=2
-	intermediate.key_material.generate_key
-	intermediate.signing_entity = true
-	intermediate.parent = root
-	signing_profile = {"extensions" => {"keyUsage" => {"usage" => ["critical", "keyCertSign"] }} }
-	intermediate.sign!(signing_profile)
-	
+  intermediate = CertificateAuthority::Certificate.new
+  intermediate.subject.common_name= "My snazzy intermediate!"
+  intermediate.serial_number.number=2
+  intermediate.key_material.generate_key
+  intermediate.signing_entity = true
+  intermediate.parent = root
+  signing_profile = {"extensions" => {"keyUsage" => {"usage" => ["critical", "keyCertSign"] }} }
+  intermediate.sign!(signing_profile)
+
 All we have to do is create another certificate like we did with the root. In this example we gave it the next available serial number which for us, was 2.  We then generate (and save!) key material for this new entity.  Even the +signing_entity+ is set to true so this certificate can sign other certificates.  The difference here is that the +parent+ field is set to the root. Going forward, whatever entity you want to sign a certificate, you set that entity to be the parent. In this case, our root will be responsible for signing this intermediate when we call +sign!+.
 
 = Creating new certificates (in general)
 
 Now that we have a root certificate (and possibly an intermediate) we can sign end-user certificates.  It is, perhaps unsurprisingly, similar to all the others:
 
-	plain_cert = CertificateAuthority::Certificate.new
-	plain_cert.subject.common_name= "http://mydomain.com"
-	plain_cert.serial_number.number=4
-	plain_cert.key_material.generate_key
-	plain_cert.parent = root # or intermediate
-	plain_cert.sign!
-	
+  plain_cert = CertificateAuthority::Certificate.new
+  plain_cert.subject.common_name= "http://mydomain.com"
+  plain_cert.serial_number.number=4
+  plain_cert.key_material.generate_key
+  plain_cert.parent = root # or intermediate
+  plain_cert.sign!
+
 That's all there is to it!  In this example we generate the key material ourselves, but it's possible for the end-user to generate certificate signing request (CSR) that we can then parse and consume automatically (coming soon).  To get the PEM formatted certificate for the user you would need to call:
 
   plain_cert.to_pem
@@ -85,27 +85,27 @@ Creating basic certificates is all well and good, but maybe you want _more_ sign
 
 Here's an example of a full signing profile for most of the common V3 extensions:
 
-	 signing_profile = {
-	   "extensions" => {
-	     "basicConstraints" => {"ca" => false},
-	     "crlDistributionPoints" => {"uri" => "http://notme.com/other.crl" },
-	     "subjectKeyIdentifier" => {},
-	     "authorityKeyIdentifier" => {},
-	     "authorityInfoAccess" => {"ocsp" => ["http://youFillThisOut/ocsp/"] },
-	     "keyUsage" => {"usage" => ["digitalSignature","nonRepudiation"] },
-	     "extendedKeyUsage" => {"usage" => [ "serverAuth","clientAuth"]},
-	     "subjectAltName" => {"uris" => ["http://subdomains.youFillThisOut/"]},
-	     "certificatePolicies" => {
-	     "policy_identifier" => "1.3.5.8", "cps_uris" => ["http://my.host.name/", "http://my.your.name/"], 
-				 "user_notice" => {
-	        "explicit_text" => "Explicit Text Here", 
-				 "organization" => "Organization name",
-				 "notice_numbers" => "1,2,3,4"
-	       }
-	   	}
-	 	}
-	}
-	
+   signing_profile = {
+     "extensions" => {
+       "basicConstraints" => {"ca" => false},
+       "crlDistributionPoints" => {"uri" => "http://notme.com/other.crl" },
+       "subjectKeyIdentifier" => {},
+       "authorityKeyIdentifier" => {},
+       "authorityInfoAccess" => {"ocsp" => ["http://youFillThisOut/ocsp/"] },
+       "keyUsage" => {"usage" => ["digitalSignature","nonRepudiation"] },
+       "extendedKeyUsage" => {"usage" => [ "serverAuth","clientAuth"]},
+       "subjectAltName" => {"uris" => ["http://subdomains.youFillThisOut/"]},
+       "certificatePolicies" => {
+       "policy_identifier" => "1.3.5.8", "cps_uris" => ["http://my.host.name/", "http://my.your.name/"], 
+         "user_notice" => {
+          "explicit_text" => "Explicit Text Here", 
+         "organization" => "Organization name",
+         "notice_numbers" => "1,2,3,4"
+         }
+       }
+     }
+  }
+
 Using a signing profile is done this way:
 
   certificate.sign!(signing_profile)
@@ -130,33 +130,33 @@ This extension controls where a conformant client can go to obtain a list of cer
 
 This extension is required to be present, but doesn't offer any configurable parameters.  Directly from the RFC:
 
-	The subject key identifier extension provides a means of identifying
-	certificates that contain a particular public key.
+  The subject key identifier extension provides a means of identifying
+  certificates that contain a particular public key.
 
-	To facilitate certification path construction, this extension MUST
-	appear in all conforming CA certificates, that is, all certificates
-	including the basic constraints extension (section 4.2.1.10) where
-	the value of cA is TRUE.  The value of the subject key identifier
-	MUST be the value placed in the key identifier field of the Authority
-	Key Identifier extension (section 4.2.1.1) of certificates issued by
-	the subject of this certificate.
-	
+  To facilitate certification path construction, this extension MUST
+  appear in all conforming CA certificates, that is, all certificates
+  including the basic constraints extension (section 4.2.1.10) where
+  the value of cA is TRUE.  The value of the subject key identifier
+  MUST be the value placed in the key identifier field of the Authority
+  Key Identifier extension (section 4.2.1.1) of certificates issued by
+  the subject of this certificate.
+
 == Authority Key Identifier
 
 Just like the subject key identifier, this is required under most circumstances and doesn't contain any meaningful configuration options.  From the RFC:
 
-	The keyIdentifier field of the authorityKeyIdentifier extension MUST
-	be included in all certificates generated by conforming CAs to
-	facilitate certification path construction.  There is one exception;
-	where a CA distributes its public key in the form of a "self-signed"
-	certificate, the authority key identifier MAY be omitted.  The
-	signature on a self-signed certificate is generated with the private
-	key associated with the certificate's subject public key.  (This
-	proves that the issuer possesses both the public and private keys.)
-	In this case, the subject and authority key identifiers would be
-	identical, but only the subject key identifier is needed for
-	certification path building.
-	
+  The keyIdentifier field of the authorityKeyIdentifier extension MUST
+  be included in all certificates generated by conforming CAs to
+  facilitate certification path construction.  There is one exception;
+  where a CA distributes its public key in the form of a "self-signed"
+  certificate, the authority key identifier MAY be omitted.  The
+  signature on a self-signed certificate is generated with the private
+  key associated with the certificate's subject public key.  (This
+  proves that the issuer possesses both the public and private keys.)
+  In this case, the subject and authority key identifiers would be
+  identical, but only the subject key identifier is needed for
+  certification path building.
+
 == Authority Info Access
 
 The authority info access extension allows a CA to sign a certificate with information a client can use to get up-to-the-minute status information on a signed certificate.  This takes the form of an OCSP[link:http://en.wikipedia.org/wiki/Online_Certificate_Status_Protocol] (Online Certificate Status Protocol) endpoints.
@@ -199,20 +199,20 @@ If you happen to have a PKCS#11 compliant hardware token you can use +certificat
 
 To configure a certificate to utilize PKCS#11 instead of in memory keys all you need to do is:
 
-	root = CertificateAuthority::Certificate.new
-	root.subject.common_name= "http://mydomain.com"
-	root.serial_number.number=1
-	root.signing_entity = true
-	
-	key_material_in_hardware = CertificateAuthority::Pkcs11KeyMaterial.new
-	key_material_in_hardware.token_id = "46"
-	key_material_in_hardware.pkcs11_lib = "/usr/lib/libeTPkcs11.so"
-	key_material_in_hardware.openssl_pkcs11_engine_lib = "/usr/lib/engines/engine_pkcs11.so"
-	key_material_in_hardware.pin = "11111111"
-	
-	root.key_material = key_material_in_hardware
-	root.sign!
-	
+  root = CertificateAuthority::Certificate.new
+  root.subject.common_name= "http://mydomain.com"
+  root.serial_number.number=1
+  root.signing_entity = true
+
+  key_material_in_hardware = CertificateAuthority::Pkcs11KeyMaterial.new
+  key_material_in_hardware.token_id = "46"
+  key_material_in_hardware.pkcs11_lib = "/usr/lib/libeTPkcs11.so"
+  key_material_in_hardware.openssl_pkcs11_engine_lib = "/usr/lib/engines/engine_pkcs11.so"
+  key_material_in_hardware.pin = "11111111"
+
+  root.key_material = key_material_in_hardware
+  root.sign!
+
 Your current version of OpenSSL _must_ include dynamic engine support and you will need to have OpenSSL PKCS#11 engine support.  You will also require the actual PKCS#11 driver from the hardware manufacturer.  As of today the only tokens I've gotten to work are:
 
 [eTokenPro] Released by Aladdin (now SafeNet Inc.). I have only had success with the version 4 and 5 (32 bit only) copy of the driver. The newer authentication client released by SafeNet appears to be completely broken for interacting with the tokens outside of SafeNet's own tools. If anyone has a different experience I'd like to hear from you.
@@ -230,7 +230,7 @@ Also of note, I have gotten these to work with 32-bit copies of Ubuntu 10.10 and
 
 == Meta
 
-Written by Chris Chandler(http://chrischandler.name) of Flatterline(http://flatterline.com)
+Written by Chris Chandler(http://chrischandler.name)
 
 Released under the MIT License: http://www.opensource.org/licenses/mit-license.php
 
