@@ -49,7 +49,7 @@ Lastly, we declare that the certificate we're about to sign is itself a signing 
 
 == Creating a new intermediate
 
-Maybe you don't want to actually sign certificates with your super-secret root certificate. This is actually how a good number of most public certificate authorities do it. Rather than sign with the primary root, they generate an intermediate root that is then responsible for signing the final certificates.  If you wanted to create a root certificate you would do something like the following:
+Maybe you don't want to actually sign certificates with your super-secret root certificate. This is actually how a good number of most public certificate authorities do it. Rather than sign with the primary root, they generate an intermediate root that is then responsible for signing the final certificates.  If you wanted to create an intermediate root certificate you would do something like the following:
 
   intermediate = CertificateAuthority::Certificate.new
   intermediate.subject.common_name= "My snazzy intermediate!"
