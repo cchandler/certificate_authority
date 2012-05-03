@@ -81,8 +81,9 @@ module CertificateAuthority
       # p openssl_config.sections
 
       factory.config = openssl_config
-      
-      self.extensions.keys.each do |k|
+
+      # Order matters: e.g. for self-signed, subjectKeyIdentifier must come before authorityKeyIdentifier
+      self.extensions.keys.sort{|a,b| b<=>a}.each do |k|
         e = extensions[k]
         next if e.to_s.nil? or e.to_s == "" ## If the extension returns an empty string we won't include it
         ext = factory.create_ext(e.openssl_identifier, e.to_s)
@@ -130,7 +131,7 @@ module CertificateAuthority
         items = signing_config[k]
         items.keys.each do |profile_item_key|
           if extension.respond_to?("#{profile_item_key}=".to_sym)
-            extension.send("#{profile_item_key}=".to_sym, items[profile_item_key] ) 
+            extension.send("#{profile_item_key}=".to_sym, items[profile_item_key] )
           else
             p "Tried applying '#{profile_item_key}' to #{extension.class} but it doesn't respond!"
           end
