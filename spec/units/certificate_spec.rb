@@ -342,6 +342,39 @@ describe CertificateAuthority::Certificate do
 
   end
 
+  describe "from_openssl" do
+    before(:each) do
+      #CERTIFICATE = nodejs.org... oh wait, there isn't one.
+      CERTIFICATE =<<CERT
+-----BEGIN CERTIFICATE-----
+MIICFDCCAc6gAwIBAgIJAPDLgMilKuayMA0GCSqGSIb3DQEBBQUAMEgxCzAJBgNV
+BAYTAlVTMRMwEQYDVQQIEwpTb21lLVN0YXRlMQowCAYDVQQKEwEgMRgwFgYDVQQD
+Ew9WZXJ5IFNtYWxsIENlcnQwHhcNMTIwNTAzMDMyODI1WhcNMTMwNTAzMDMyODI1
+WjBIMQswCQYDVQQGEwJVUzETMBEGA1UECBMKU29tZS1TdGF0ZTEKMAgGA1UEChMB
+IDEYMBYGA1UEAxMPVmVyeSBTbWFsbCBDZXJ0MEwwDQYJKoZIhvcNAQEBBQADOwAw
+OAIxAN6+33+WQ3FBMt+vMhshxOj+8W7V64pDKCJ3pVlnSn36imBWqrN0AGWX8qjv
+S+GzGwIDAQABo4GqMIGnMB0GA1UdDgQWBBRMUQ/HpPrAkKOufS5h+xPtEuzyWDB4
+BgNVHSMEcTBvgBRMUQ/HpPrAkKOufS5h+xPtEuzyWKFMpEowSDELMAkGA1UEBhMC
+VVMxEzARBgNVBAgTClNvbWUtU3RhdGUxCjAIBgNVBAoTASAxGDAWBgNVBAMTD1Zl
+cnkgU21hbGwgQ2VydIIJAPDLgMilKuayMAwGA1UdEwQFMAMBAf8wDQYJKoZIhvcN
+AQEFBQADMQAq0CsqEChn4uf6MkXYBwaAAmS3JLmagyliJe5zM3y8dZz6Em2Ugb8o
+1cCaKaHJHSg=
+-----END CERTIFICATE-----
+CERT
+      @openssl_cert = OpenSSL::X509::Certificate.new CERTIFICATE
+      @small_cert = CertificateAuthority::Certificate.from_openssl @openssl_cert
+    end
+
+    it "should reject non-Certificate arguments" do
+      lambda { CertificateAuthority::Certificate.from_openssl "a string" }.should raise_error
+    end
+
+    it "should only be missing a private key" do
+      @small_cert.should_not be_valid
+      @small_cert.key_material.private_key = "data"
+      @small_cert.should be_valid
+    end
+  end
 
   it "should have a distinguished name" do
     @certificate.distinguished_name.should_not be_nil
