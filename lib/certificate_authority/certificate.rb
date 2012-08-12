@@ -82,7 +82,8 @@ module CertificateAuthority
 
       factory.config = openssl_config
 
-      self.extensions.keys.each do |k|
+      # Order matters: e.g. for self-signed, subjectKeyIdentifier must come before authorityKeyIdentifier
+      self.extensions.keys.sort{|a,b| b<=>a}.each do |k|
         e = extensions[k]
         next if e.to_s.nil? or e.to_s == "" ## If the extension returns an empty string we won't include it
         ext = factory.create_ext(e.openssl_identifier, e.to_s)
@@ -177,6 +178,23 @@ module CertificateAuthority
         config[k] = hash[k]
       end
       config
+    end
+
+    def self.from_openssl openssl_cert
+      unless openssl_cert.is_a? OpenSSL::X509::Certificate
+        raise "Can only construct from an OpenSSL::X509::Certificate"
+      end
+
+      certificate = Certificate.new
+      # Only subject, key_material, and body are used for signing
+      certificate.distinguished_name = DistinguishedName.from_openssl openssl_cert.subject
+      certificate.key_material.public_key = openssl_cert.public_key
+      certificate.openssl_body = openssl_cert
+      certificate.serial_number.number = openssl_cert.serial.to_i
+      certificate.not_before = openssl_cert.not_before
+      certificate.not_after = openssl_cert.not_after
+      # TODO extensions
+      certificate
     end
 
   end

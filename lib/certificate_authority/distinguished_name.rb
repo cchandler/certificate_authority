@@ -35,5 +35,24 @@ module CertificateAuthority
       name.add_entry("C", country) unless country.blank?
       name
     end
+
+    def self.from_openssl openssl_name
+      unless openssl_name.is_a? OpenSSL::X509::Name
+        raise "Argument must be a OpenSSL::X509::Name"
+      end
+
+      name = DistinguishedName.new
+      openssl_name.to_a.each do |k,v|
+        case k
+        when "CN" then name.common_name = v
+        when "L" then name.locality = v
+        when "ST" then name.state = v
+        when "C" then name.country = v
+        when "O" then name.organization = v
+        when "OU" then name.organizational_unit = v
+        end
+      end
+      name
+    end
   end
 end
