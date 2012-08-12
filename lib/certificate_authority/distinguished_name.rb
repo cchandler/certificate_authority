@@ -44,12 +44,12 @@ module CertificateAuthority
       name = DistinguishedName.new
       openssl_name.to_a.each do |k,v|
         case k
-        when "CN": name.common_name = v
-        when "L": name.locality = v
-        when "ST": name.state = v
-        when "C": name.country = v
-        when "O": name.organization = v
-        when "OU": name.organizational_unit = v
+        when "CN" then name.common_name = v
+        when "L" then name.locality = v
+        when "ST" then name.state = v
+        when "C" then name.country = v
+        when "O" then name.organization = v
+        when "OU" then name.organizational_unit = v
         end
       end
       name
