@@ -5,7 +5,7 @@
 
 Gem::Specification.new do |s|
   s.name = "certificate_authority"
-  s.version = "0.1.5"
+  s.version = "0.1.6"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Chris Chandler"]
@@ -50,40 +50,23 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
   s.rubygems_version = "1.8.15"
   s.summary = "Ruby gem for managing the core functions outlined in RFC-3280 for PKI"
-  s.test_files = [
-    "spec/spec_helper.rb",
-    "spec/units/certificate_authority_spec.rb",
-    "spec/units/certificate_revocation_list_spec.rb",
-    "spec/units/certificate_spec.rb",
-    "spec/units/distinguished_name_spec.rb",
-    "spec/units/extensions_spec.rb",
-    "spec/units/key_material_spec.rb",
-    "spec/units/ocsp_handler_spec.rb",
-    "spec/units/pkcs11_key_material_spec.rb",
-    "spec/units/serial_number_spec.rb",
-    "spec/units/signing_entity_spec.rb",
-    "spec/units/units_helper.rb"
-  ]
 
   if s.respond_to? :specification_version then
     s.specification_version = 3
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
-      s.add_runtime_dependency(%q<activemodel>, ["~> 3.0.6"])
+      s.add_runtime_dependency(%q<activemodel>, [">= 3.0.6"])
       s.add_development_dependency(%q<rspec>, [">= 0"])
-      s.add_development_dependency(%q<jeweler>, ["~> 1.5.2"])
-      s.add_development_dependency(%q<rcov>, [">= 0"])
+      s.add_development_dependency(%q<jeweler>, [">= 1.5.2"])
     else
-      s.add_dependency(%q<activemodel>, ["~> 3.0.6"])
+      s.add_dependency(%q<activemodel>, [">= 3.0.6"])
       s.add_dependency(%q<rspec>, [">= 0"])
-      s.add_dependency(%q<jeweler>, ["~> 1.5.2"])
-      s.add_dependency(%q<rcov>, [">= 0"])
+      s.add_dependency(%q<jeweler>, [">= 1.5.2"])
     end
   else
-    s.add_dependency(%q<activemodel>, ["~> 3.0.6"])
+    s.add_dependency(%q<activemodel>, [">= 3.0.6"])
     s.add_dependency(%q<rspec>, [">= 0"])
-    s.add_dependency(%q<jeweler>, ["~> 1.5.2"])
-    s.add_dependency(%q<rcov>, [">= 0"])
+    s.add_dependency(%q<jeweler>, [">= 1.5.2"])
   end
 end
 
