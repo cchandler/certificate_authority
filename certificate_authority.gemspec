@@ -4,13 +4,13 @@
 # -*- encoding: utf-8 -*-
 
 Gem::Specification.new do |s|
-  s.name = %q{certificate_authority}
-  s.version = "0.1.3"
+  s.name = "certificate_authority"
+  s.version = "0.1.4"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Chris Chandler"]
-  s.date = %q{2011-05-08}
-  s.email = %q{chris@flatterline.com}
+  s.date = "2012-08-12"
+  s.email = "chris@flatterline.com"
   s.extra_rdoc_files = [
     "README.rdoc"
   ]
@@ -40,15 +40,16 @@ Gem::Specification.new do |s|
     "spec/units/extensions_spec.rb",
     "spec/units/key_material_spec.rb",
     "spec/units/ocsp_handler_spec.rb",
+    "spec/units/pkcs11_key_material_spec.rb",
     "spec/units/serial_number_spec.rb",
     "spec/units/signing_entity_spec.rb",
     "spec/units/units_helper.rb"
   ]
-  s.homepage = %q{http://github.com/cchandler/certificate_authority}
+  s.homepage = "http://github.com/cchandler/certificate_authority"
   s.licenses = ["MIT"]
   s.require_paths = ["lib"]
-  s.rubygems_version = %q{1.7.2}
-  s.summary = %q{Ruby gem for managing the core functions outlined in RFC-3280 for PKI}
+  s.rubygems_version = "1.8.15"
+  s.summary = "Ruby gem for managing the core functions outlined in RFC-3280 for PKI"
   s.test_files = [
     "spec/spec_helper.rb",
     "spec/units/certificate_authority_spec.rb",
@@ -58,6 +59,7 @@ Gem::Specification.new do |s|
     "spec/units/extensions_spec.rb",
     "spec/units/key_material_spec.rb",
     "spec/units/ocsp_handler_spec.rb",
+    "spec/units/pkcs11_key_material_spec.rb",
     "spec/units/serial_number_spec.rb",
     "spec/units/signing_entity_spec.rb",
     "spec/units/units_helper.rb"
@@ -67,18 +69,18 @@ Gem::Specification.new do |s|
     s.specification_version = 3
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
-      s.add_runtime_dependency(%q<activemodel>, [">= 3.0.6"])
+      s.add_runtime_dependency(%q<activemodel>, ["~> 3.0.6"])
       s.add_development_dependency(%q<rspec>, [">= 0"])
       s.add_development_dependency(%q<jeweler>, ["~> 1.5.2"])
       s.add_development_dependency(%q<rcov>, [">= 0"])
     else
-      s.add_dependency(%q<activemodel>, [">= 3.0.6"])
+      s.add_dependency(%q<activemodel>, ["~> 3.0.6"])
       s.add_dependency(%q<rspec>, [">= 0"])
       s.add_dependency(%q<jeweler>, ["~> 1.5.2"])
       s.add_dependency(%q<rcov>, [">= 0"])
     end
   else
-    s.add_dependency(%q<activemodel>, [">= 3.0.6"])
+    s.add_dependency(%q<activemodel>, ["~> 3.0.6"])
     s.add_dependency(%q<rspec>, [">= 0"])
     s.add_dependency(%q<jeweler>, ["~> 1.5.2"])
     s.add_dependency(%q<rcov>, [">= 0"])
