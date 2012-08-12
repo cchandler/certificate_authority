@@ -18,7 +18,7 @@ module CertificateAuthority
 
     validate do |certificate|
       errors.add :base, "Distinguished name must be valid" unless distinguished_name.valid?
-      errors.add :base, "Key material name must be valid" unless key_material.valid?
+      errors.add :base, "Key material must be valid" unless key_material.valid?
       errors.add :base, "Serial number must be valid" unless serial_number.valid?
       errors.add :base, "Extensions must be valid" unless extensions.each do |item|
         unless item.respond_to?(:valid?)
