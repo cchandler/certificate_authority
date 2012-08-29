@@ -425,4 +425,47 @@ CERT
     @certificate.revoked?.should be_true
   end
 
+  describe CertificateAuthority::SigningRequestKeyMaterial do
+    before(:each) do
+      @req_raw = <<REQ
+-----BEGIN CERTIFICATE REQUEST-----
+MIICzzCCAbcCAQAwgYkxCzAJBgNVBAYTAlVTMQ4wDAYDVQQIDAVUZXhhczESMBAG
+A1UEBwwJQXJsaW5ndG9uMQwwCgYDVQQKDANCYWgxCzAJBgNVBAsMAk5vMRswGQYD
+VQQDDBJwemVyby5ib3VneW1hbi5jb20xHjAcBgkqhkiG9w0BCQEWD3RqQHJ1Ynlp
+c3RzLmNvbTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAL+UD2trMNFh
+lR3utCWBO3i9/VVdz13OnsSrmrnKvVeB6wRUd1gtxJ6sTi70ywN1vJqC3OuiO53G
+CPzqWDsaVhQy7wTYCY+6uRfI23pcZZG/sGOHVJAJw+zadyd5LDqh3khsaZHBx1VK
+ZiRee09QAnN4kK1uxB5B1ZCE01GzS9ERck7thwlcH2mDMuUtMxXmtEcl8sSeCkZO
+CJ9TH21Q90oryZH14+fkhIjDTmyXAtj7kOjyAEu6aD+kYd03Yk+5XWJUVdpuug9Y
+ZX7oMd8dzg9wiWzveKWypQ23BxcUS9ejiZVhj0TE0UPAKIhTw/0QkWoNcHOkwh29
+X4fdAFIR3gkCAwEAAaAAMA0GCSqGSIb3DQEBBQUAA4IBAQAqlbx13HtfXFJf2boC
+IcGrjaY+rOh9rNrXiGN9+DCZciQhEi8ZpOdygwZ4oKE/QjnPX+Q2sm/xjyhqp62v
+NZsIGR8jnu1L7c5Jik72W/E2Jz6WLb/dWcGn45pSgi1HvRm+SXTWCIpZYfUrA+A/
+x1x4CgU+tBFXtgMGTbK6F+JoaGsBeBkYG95pYurgS9mo62r0Mau3qi68DFzcXCuR
+IibGCcF9hys7LbqLLDob6i1Y9TQtw5f6ARE4SkA9TvWM3VPDxn6F+Qfg8TAj7r1q
+vecFC7r3d0ySWkdsy+Snzvt0ruu5pOfaTRBQqrIKVeGpOIp7sOhBlExtl/unHkCZ
+IpZl
+-----END CERTIFICATE REQUEST-----
+REQ
+      @openssl_req = OpenSSL::X509::Request.new @req_raw
+    end
+    it "should only accept valid OpenSSL requests" do
+      lambda { CertificateAuthority::SigningRequestKeyMaterial.new OpenSSL::X509::Request.new }.should raise_error
+      req = CertificateAuthority::SigningRequestKeyMaterial.new @openssl_req
+      req.csr.subject.should_not be_nil
+    end
+
+    it "should add a cert when signed by a root ca" do
+      csr = CertificateAuthority::SigningRequestKeyMaterial.new @openssl_req
+      @certificate.serial_number.number = 1
+      @certificate.subject.common_name = "chrischandler.name"
+      @certificate.key_material.generate_key(1024)
+      @certificate.sign!
+      signed_cert = csr.sign_and_certify(@certificate, @certificate.key_material.private_key, 555)
+      signed_cert.should_not be_nil
+      signed_cert.subject.to_x509_name.to_s.should == "/CN=pzero.bougyman.com/O=Bah/OU=No/ST=Texas/L=Arlington/C=US"
+    end
+
+  end
+
 end

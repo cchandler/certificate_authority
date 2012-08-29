@@ -68,12 +68,27 @@ module CertificateAuthority
     end
 
     attr_accessor :public_key
+    attr_reader :csr, :certificate
 
     def initialize(request=nil)
       if request.is_a? OpenSSL::X509::Request
-        raise "Invalid certificate signing request" unless request.verify request.public_key
-        self.public_key = request.public_key
+        @csr = request
+        raise "Invalid certificate signing request" unless @csr.verify @csr.public_key
+        self.public_key = @csr.public_key
       end
+    end
+
+    def sign_and_certify(root_cert, key, serial_number, options = {})
+      algorithm = options[:algorithm] || OpenSSL::Digest::SHA1.new
+      cert = OpenSSL::X509::Certificate.new
+      cert.subject = csr.subject
+      cert.public_key = public_key
+      cert.not_before = Time.now
+      cert.not_after = options[:not_after] || (Time.now + 100000000)
+      cert.issuer = root_cert.subject.to_x509_name
+      cert.serial = serial_number
+      cert.sign key, algorithm
+      @certificate = CertificateAuthority::Certificate.from_openssl cert
     end
 
     def is_in_hardware?
