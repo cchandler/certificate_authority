@@ -180,6 +180,15 @@ module CertificateAuthority
       config
     end
 
+    def self.from_pkcs12 openssl_pkcs12, passphrase = nil
+      unless openssl_pkcs12.is_a? OpenSSL::PKCS12
+        raise "Can only construct from an OpenSSL::PKCS12"
+      end
+      certificate = from_openssl openssl_pkcs12.certificate
+      certificate.key_material.private_key = openssl_pkcs12.key
+      certificate
+    end
+
     def self.from_openssl openssl_cert
       unless openssl_cert.is_a? OpenSSL::X509::Certificate
         raise "Can only construct from an OpenSSL::X509::Certificate"
