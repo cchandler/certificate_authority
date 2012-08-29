@@ -73,7 +73,7 @@ module CertificateAuthority
     def initialize(request=nil)
       if request.is_a? OpenSSL::X509::Request
         @csr = request
-        raise "Invalid certificate signing request" unless @csr.verify @csr.public_key
+        raise "Invalid certificate signing request" unless @csr.verify(@csr.public_key)
         self.public_key = @csr.public_key
       end
     end

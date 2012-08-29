@@ -449,8 +449,9 @@ IpZl
 REQ
       @openssl_req = OpenSSL::X509::Request.new @req_raw
     end
+
     it "should only accept valid OpenSSL requests" do
-      lambda { CertificateAuthority::SigningRequestKeyMaterial.new OpenSSL::X509::Request.new }.should raise_error
+      lambda { CertificateAuthority::SigningRequestKeyMaterial.new OpenSSL::X509::Request.new }.should raise_error(OpenSSL::X509::RequestError)
       req = CertificateAuthority::SigningRequestKeyMaterial.new @openssl_req
       req.csr.subject.should_not be_nil
     end
