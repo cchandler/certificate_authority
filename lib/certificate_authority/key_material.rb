@@ -79,7 +79,7 @@ module CertificateAuthority
     end
 
     def sign_and_certify(root_cert, key, serial_number, options = {})
-      if key.is_a? OpenSSL::Netscape::SPKI
+      if csr.is_a? OpenSSL::Netscape::SPKI
         raise "Must pass :dn in options to generate certificates for OpenSSL::Netscape::SPKI requests" unless options[:dn]
       end
       algorithm = options[:algorithm] || OpenSSL::Digest::SHA1.new

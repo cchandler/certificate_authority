@@ -475,6 +475,7 @@ SPKAC
       dn = CertificateAuthority::DistinguishedName.new
       dn.common_name = "chrischandler.name"
       csr = CertificateAuthority::SigningRequestKeyMaterial.new spkac
+      lambda { csr.sign_and_certify(@certificate, @certificate.key_material.private_key, 554) }.should raise_error(RuntimeError)
       signed_cert = csr.sign_and_certify(@certificate, @certificate.key_material.private_key, 555, :dn => dn)
       signed_cert.should_not be_nil
       signed_cert.subject.to_x509_name.to_s.should == "/CN=chrischandler.name"
