@@ -448,6 +448,10 @@ IpZl
 -----END CERTIFICATE REQUEST-----
 REQ
       @openssl_req = OpenSSL::X509::Request.new @req_raw
+      @certificate.serial_number.number = 1
+      @certificate.subject.common_name = "chrischandler.name"
+      @certificate.key_material.generate_key(1024)
+      @certificate.sign!
     end
 
     it "should only accept valid OpenSSL requests" do
@@ -458,13 +462,22 @@ REQ
 
     it "should add a cert when signed by a root ca" do
       csr = CertificateAuthority::SigningRequestKeyMaterial.new @openssl_req
-      @certificate.serial_number.number = 1
-      @certificate.subject.common_name = "chrischandler.name"
-      @certificate.key_material.generate_key(1024)
-      @certificate.sign!
       signed_cert = csr.sign_and_certify(@certificate, @certificate.key_material.private_key, 555)
       signed_cert.should_not be_nil
       signed_cert.subject.to_x509_name.to_s.should == "/CN=pzero.bougyman.com/O=Bah/OU=No/ST=Texas/L=Arlington/C=US"
+    end
+
+    it "can sign an SPKAC SPKI and generate a certificate" do
+      spkac_raw = <<SPKAC
+MIICQDCCASgwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDVDEqzj21++aMWvN6zzwDXKKpR9g5hIeAPYqbUdaPFePhtz7R73l7fVxDeQZDQpQxTqts0/w0wEa/A1ehHCtAkDoTYzjwX8G0Gkb90poA156I8b4Cl1Q2veKbLsaOsMWItlXSU6HULQ5McfYfvEaPmIKiIr0UIFdzMDcy9TnY854w9TcQVvLJZcQkaM3dy/p9W4gg0a9hBJwwFUUR2UV/nEEi+++HbsOE46Z7Y3qoQhLrL4DNUrXUPDVeqac1SmNfKTA71QADbezWDfKi9habHHGXqk18i2Pl6uA2mpNPuSWnEHbQONgnfeoWZBvMWkwlolaBeWhGSmgcL/HqaRLlFAgMBAAEWADANBgkqhkiG9w0BAQQFAAOCAQEAp8wOvrl2QG9p1PS19dnrh4l0JWNAPB+d1kc64xUG6FAfGCKnOHzdDndTJfEERhWqFA0XL+mvKXCQsYKXkOuxYYmxJXZsdcCj7mOMhI2uMrEVd1ALFmG5WBW1Mo3nHHa/BX24fAOLv0+aGXYTz3oaMFydBw+XPZ26x9pO9LjlQQYGGyQRMpceWfej367KnR4a7IafDGBUI6OoWsx/7kQRIGkbmzi+dnU7HgpEExyz+uuxlUxrZqa13Ys8dBp62NBJWFanPl+AhMe8g/Li5aiERrMUbFtiXzOp48Si7J54fs+U3w0WoD9cdG5mN2Rn8Jog8azl+YC/XY987YGAi7Y8EQ==
+SPKAC
+      spkac = OpenSSL::Netscape::SPKI.new spkac_raw
+      dn = CertificateAuthority::DistinguishedName.new
+      dn.common_name = "chrischandler.name"
+      csr = CertificateAuthority::SigningRequestKeyMaterial.new spkac
+      signed_cert = csr.sign_and_certify(@certificate, @certificate.key_material.private_key, 555, :dn => dn)
+      signed_cert.should_not be_nil
+      signed_cert.subject.to_x509_name.to_s.should == "/CN=chrischandler.name"
     end
 
   end

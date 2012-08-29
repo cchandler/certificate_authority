@@ -71,7 +71,7 @@ module CertificateAuthority
     attr_reader :csr, :certificate
 
     def initialize(request=nil)
-      if request.is_a? OpenSSL::X509::Request
+      if request.is_a?(OpenSSL::X509::Request) || request.is_a?(OpenSSL::Netscape::SPKI)
         @csr = request
         raise "Invalid certificate signing request" unless @csr.verify(@csr.public_key)
         self.public_key = @csr.public_key
@@ -79,9 +79,16 @@ module CertificateAuthority
     end
 
     def sign_and_certify(root_cert, key, serial_number, options = {})
+      if key.is_a? OpenSSL::Netscape::SPKI
+        raise "Must pass :dn in options to generate certificates for OpenSSL::Netscape::SPKI requests" unless options[:dn]
+      end
       algorithm = options[:algorithm] || OpenSSL::Digest::SHA1.new
       cert = OpenSSL::X509::Certificate.new
-      cert.subject = csr.subject
+      if options[:dn]
+        cert.subject = options[:dn].to_x509_name
+      else
+        cert.subject = csr.subject
+      end
       cert.public_key = public_key
       cert.not_before = Time.now
       cert.not_after = options[:not_after] || (Time.now + 100000000)
