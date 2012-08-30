@@ -88,7 +88,7 @@ module CertificateAuthority
 
     # Given a root certificate and a key, will generate a signed certificate
     # @param root_cert [CertificateAuthority::Certificate] the parent certificate (CA)
-    # @param key [PrivateKey] the private key to sign with
+    # @param key [OpenSSL::Pkey::RSA] the private key to sign with
     # @param serial_number [Integer] the serial number for the generated certificate
     # @param options [Hash{:dn => CertificateAuthority::DistinguishedName, :algorithm => OpenSSL::Digest}] :dn is required for SPKAC signing
     # @return [CertificateAuthority::Certificate] A signed certificate instance
