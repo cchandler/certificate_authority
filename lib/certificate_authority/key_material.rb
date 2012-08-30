@@ -35,14 +35,18 @@ module CertificateAuthority
       record.errors.add :public_key, "cannot be blank" if record.public_key.nil?
     end
 
+    # @return [Boolean]
     def is_in_hardware?
       false
     end
 
+    # @return [Boolean]
     def is_in_memory?
       true
     end
 
+    # @param modulus_bits [Integer] number of bits to generate the key with
+    # @return [OpenSSL::Pkey::RSA]
     def generate_key(modulus_bits=2048)
       self.keypair = OpenSSL::PKey::RSA.new(modulus_bits)
       self.private_key = keypair
@@ -50,10 +54,12 @@ module CertificateAuthority
       self.keypair
     end
 
+    # @return [OpenSSL::Pkey::RSA]
     def private_key
       @private_key
     end
 
+    # @return [OpenSSL::Pkey::RSA]
     def public_key
       @public_key
     end
@@ -68,8 +74,10 @@ module CertificateAuthority
     end
 
     attr_accessor :public_key
-    attr_reader :csr, :certificate
+    attr_reader :csr # @return [OpenSSL::X509::Request,OpenSSL::Netscape::SPKI]
+    attr_reader :certificate # @return [CertificateAuthority::Certificate]
 
+    # @param request [OpenSSL::X508::Request,OpenSSL::Netscape::SPKI,String] a signing request
     def initialize(request=nil)
       if request.is_a?(OpenSSL::X509::Request) || request.is_a?(OpenSSL::Netscape::SPKI)
         @csr = request
@@ -78,6 +86,12 @@ module CertificateAuthority
       end
     end
 
+    # Given a root certificate and a key, will generate a signed certificate
+    # @param root_cert [CertificateAuthority::Certificate] the parent certificate (CA)
+    # @param key [PrivateKey] the private key to sign with
+    # @param serial_number [Integer] the serial number for the generated certificate
+    # @param options [Hash{:dn => CertificateAuthority::DistinguishedName, :algorithm => OpenSSL::Digest}] :dn is required for SPKAC signing
+    # @return [CertificateAuthority::Certificate] A signed certificate instance
     def sign_and_certify(root_cert, key, serial_number, options = {})
       if csr.is_a? OpenSSL::Netscape::SPKI
         raise "Must pass :dn in options to generate certificates for OpenSSL::Netscape::SPKI requests" unless options[:dn]
@@ -98,18 +112,22 @@ module CertificateAuthority
       @certificate = CertificateAuthority::Certificate.from_openssl cert
     end
 
+    # @return [Boolean]
     def is_in_hardware?
       false
     end
 
+    # @return [Boolean]
     def is_in_memory?
       true
     end
 
+    # @return [NilClass]
     def private_key
       nil
     end
 
+    # @return [OpenSSL::Pkey::RSA]
     def public_key
       @public_key
     end
