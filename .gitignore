@@ -3,3 +3,4 @@ development
 .bundle
 .rvmrc
 doc
+.yardoc
