@@ -90,7 +90,7 @@ module CertificateAuthority
     # @param root_cert [CertificateAuthority::Certificate] the parent certificate (CA)
     # @param key [OpenSSL::Pkey::RSA] the private key to sign with
     # @param serial_number [Integer] the serial number for the generated certificate
-    # @param options [Hash{:dn => CertificateAuthority::DistinguishedName, :algorithm => OpenSSL::Digest}] :dn is required for SPKAC signing
+    # @param options [Hash{:dn => CertificateAuthority::DistinguishedName, :algorithm => OpenSSL::Digest, :not_after => Time}] :dn is required for SPKAC signing
     # @return [CertificateAuthority::Certificate] A signed certificate instance
     def sign_and_certify(root_cert, key, serial_number, options = {})
       if csr.is_a? OpenSSL::Netscape::SPKI
