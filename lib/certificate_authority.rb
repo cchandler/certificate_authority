@@ -14,6 +14,7 @@ require 'certificate_authority/extensions'
 require 'certificate_authority/certificate'
 require 'certificate_authority/certificate_revocation_list'
 require 'certificate_authority/ocsp_handler'
+require 'certificate_authority/signing_request'
 
 module CertificateAuthority
 end
