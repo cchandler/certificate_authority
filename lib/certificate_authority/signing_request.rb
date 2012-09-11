@@ -7,7 +7,9 @@ module CertificateAuthority
 
     def to_cert
       cert = Certificate.new
-      cert.distinguished_name = @distinguished_name
+      if !@distinguished_name.nil?
+        cert.distinguished_name = @distinguished_name
+      end
       cert.key_material = @key_material
       cert
     end
@@ -21,6 +23,15 @@ module CertificateAuthority
       key_material = SigningRequestKeyMaterial.new
       key_material.public_key = openssl_csr.public_key
       csr.key_material = key_material
+      csr
+    end
+
+    def self.from_netscape_spkac(raw_spkac)
+      openssl_spkac = OpenSSL::Netscape::SPKI.new raw_spkac
+      csr = SigningRequest.new
+      csr.raw_body = raw_spkac
+      key_material = SigningRequestKeyMaterial.new
+      key_material.public_key = openssl_spkac.public_key
       csr
     end
   end
