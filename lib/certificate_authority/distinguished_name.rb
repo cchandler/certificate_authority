@@ -6,24 +6,31 @@ module CertificateAuthority
 
     attr_accessor :common_name
     alias :cn :common_name
+    alias :cn= :common_name=
 
     attr_accessor :locality
     alias :l :locality
+    alias :l= :locality=
 
     attr_accessor :state
     alias :s :state
+    alias :st= :state=
 
     attr_accessor :country
     alias :c :country
+    alias :c= :country=
 
     attr_accessor :organization
     alias :o :organization
+    alias :o= :organization=
 
     attr_accessor :organizational_unit
     alias :ou :organizational_unit
+    alias :ou= :organizational_unit=
 
     attr_accessor :email_address
     alias :emailAddress :email_address
+    alias :emailAddress= :email_address=
 
     def to_x509_name
       raise "Invalid Distinguished Name" unless valid?
@@ -50,19 +57,41 @@ module CertificateAuthority
         raise "Argument must be a OpenSSL::X509::Name"
       end
 
-      name = DistinguishedName.new
-      openssl_name.to_a.each do |k,v|
-        case k
-        when "CN" then name.common_name = v
-        when "L" then name.locality = v
-        when "ST" then name.state = v
-        when "C" then name.country = v
-        when "O" then name.organization = v
-        when "OU" then name.organizational_unit = v
-        when "emailAddress" then name.email_address = v
+      WrappedDistinguishedName.new(openssl_name)
+    end
+  end
+
+  ## This is a significantly more complicated case. It's possible that
+  ## generically handled certificates will include custom OIDs in the
+  ## subject.
+  class WrappedDistinguishedName < DistinguishedName
+    attr_accessor :x509_name
+
+    def initialize(x509_name)
+      @x509_name = x509_name
+
+      subject = @x509_name.to_a
+      subject.each do |element|
+        field = element[0].downcase
+        value = element[1]
+        #type = element[2] ## -not used
+        method_sym = "#{field}=".to_sym
+        if self.respond_to?(method_sym)
+          self.send("#{field}=",value)
+        else
+          ## Custom OID
+          @custom_oids = true
         end
       end
-      name
+
+    end
+
+    def to_x509_name
+      @x509_name
+    end
+
+    def custom_oids?
+      @custom_oids
     end
   end
 end

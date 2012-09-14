@@ -17,7 +17,7 @@ describe "Using OpenSSL" do
 
   end
 
-  context "Singing CSRs" do
+  context "Signing CSRs" do
     shared_examples_for "a csr operation" do
       before :all do
         @ca = sample_file("certs/ca.crt").read

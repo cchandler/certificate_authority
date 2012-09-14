@@ -55,5 +55,16 @@ describe CertificateAuthority::DistinguishedName do
     it "should create an equivalent object" do
       @dn.to_x509_name.to_s.split('/').should =~ @name.to_s.split('/')
     end
+
+  end
+
+  describe CertificateAuthority::WrappedDistinguishedName do
+    it "should mark the DN as having custom OIDs if there's an unknown subject element" do
+      OpenSSL::ASN1::ObjectId.register("2.3.4.5","testing","testingCustomOIDs")
+      subject = "/testingCustomOIDs=custom/CN=justincummins.name/L=on my laptop/ST=relaxed/C=as/O=programmer/OU=using this code"
+      @name = OpenSSL::X509::Name.parse subject
+      @dn = CertificateAuthority::DistinguishedName.from_openssl @name
+      @dn.custom_oids?.should be_true
+    end
   end
 end
