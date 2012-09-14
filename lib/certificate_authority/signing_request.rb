@@ -14,6 +14,17 @@ module CertificateAuthority
       cert
     end
 
+    def to_x509_csr
+      raise "Must specify a DN/subject on csr" if @distinguished_name.nil?
+      raise "Invalid DN in request" unless @distinguished_name.valid?
+      raise "CSR must have key material" if @key_material.nil?
+      raise "CSR must include a public key on key material" if @key_material.public_key.nil?
+      opensslcsr = OpenSSL::X509::Request.new
+      opensslcsr.subject = @distinguished_name.to_x509_name
+      opensslcsr.public_key = @key_material.public_key
+      opensslcsr
+    end
+
     def self.from_x509_csr(raw_csr)
       csr = SigningRequest.new
       openssl_csr = OpenSSL::X509::Request.new(raw_csr)

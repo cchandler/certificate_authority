@@ -96,4 +96,42 @@ EOF
       @csr.should be_a(CertificateAuthority::SigningRequest)
     end
   end
+
+  describe "Generating CSRs" do
+    it "should generate a csr" do
+      csr = CertificateAuthority::SigningRequest.new
+      dn = CertificateAuthority::DistinguishedName.new
+      dn.common_name = "localhost"
+      csr.distinguished_name = dn
+      key_pair =<<EOF
+-----BEGIN RSA PRIVATE KEY-----
+MIICXAIBAAKBgQCxiGVfRrf90CHmvXa+XYWE4m7LZ1slc6cxIYyIgZuQ5T8AeqUa
+kbyYY4wMUR2gZ4pDPs/WGs8fW66q23qmHSr1bQ6HaL8znbD7UL/IiiyiW8I11orb
+rhimIx1A606qi8/0gQc+H851gzUusd5xgKP2X+oPxYx3VG3dpksLnNK1IwIDAQAB
+AoGAfrNNRbX+0dGcoERPXoT4KWJAmEHnNs9XXyUGWtXE5J/3Wqws8M1Zv5gr9w5d
+CoFal6tYQQFZGJQiECYbXjoq0VT8ApWfuO/mCXyXfmnLFEU8EJjmXtXzn2yyPfoY
+At7O8QwvG0bwtw1SqNf7cRtlOEIqoLMtdyaVv4C5ffyheIECQQDVdVf2Sk113Kke
+PREzEb6XZ0n2ugSG8fWJh2QKUI4RXhg7bDzHhSpexeKsJdoet8NJOUEsXMoqLSzK
+bBnSD63RAkEA1OogtDCkpwkvqC63a7hyDP7qRVHFuVeSA1fu+6BFS0xblkgvcPXT
+J7WbWYcP+lqcLjXWeFsqe5qS6sDCsAhsswJAIumZZHgMqU1Y/9AfIwow8RR8vXT5
+TpT+gur5CtLYGbEZJ4bxffSi1HNrOprKTSHjN/O8XCQlELboz4bUxk24MQJAcsaX
+xKsoR4dTMoWkiSRQDyNoJOA1B3nmk3jWsryuPi42fSgCsxFBt/lVeoitm1c3NE3/
+hLgYibNFGdm52e1gswJBAMwYuImbl6AVLv0Y41smxIkvfAzlyNfTAsp7GqLoMhYN
+q/0KoyI2Ge3+NnmJI/eaiYs8qC2HjrgdX9ZDSUCWfpQ=
+-----END RSA PRIVATE KEY-----
+EOF
+      k = CertificateAuthority::KeyMaterial.from_x509_key_pair(key_pair)
+      csr.key_material = k
+      expected =<<EOF
+-----BEGIN CERTIFICATE REQUEST-----
+MIHHMIG8AgAwFDESMBAGA1UEAwwJbG9jYWxob3N0MIGfMA0GCSqGSIb3DQEBAQUA
+A4GNADCBiQKBgQCxiGVfRrf90CHmvXa+XYWE4m7LZ1slc6cxIYyIgZuQ5T8AeqUa
+kbyYY4wMUR2gZ4pDPs/WGs8fW66q23qmHSr1bQ6HaL8znbD7UL/IiiyiW8I11orb
+rhimIx1A606qi8/0gQc+H851gzUusd5xgKP2X+oPxYx3VG3dpksLnNK1IwIDAQAB
+oAAwAwYBAAMBAA==
+-----END CERTIFICATE REQUEST-----
+EOF
+      csr.to_x509_csr.to_pem.should == expected
+    end
+  end
 end
