@@ -15,6 +15,85 @@ describe CertificateAuthority::KeyMaterial do
       @key_material.is_in_memory?.should be_true
     end
   end
+
+  describe "reading keys from PEM" do
+    before(:each) do
+      @key_pair=<<EOF
+-----BEGIN RSA PRIVATE KEY-----
+MIICXAIBAAKBgQCxiGVfRrf90CHmvXa+XYWE4m7LZ1slc6cxIYyIgZuQ5T8AeqUa
+kbyYY4wMUR2gZ4pDPs/WGs8fW66q23qmHSr1bQ6HaL8znbD7UL/IiiyiW8I11orb
+rhimIx1A606qi8/0gQc+H851gzUusd5xgKP2X+oPxYx3VG3dpksLnNK1IwIDAQAB
+AoGAfrNNRbX+0dGcoERPXoT4KWJAmEHnNs9XXyUGWtXE5J/3Wqws8M1Zv5gr9w5d
+CoFal6tYQQFZGJQiECYbXjoq0VT8ApWfuO/mCXyXfmnLFEU8EJjmXtXzn2yyPfoY
+At7O8QwvG0bwtw1SqNf7cRtlOEIqoLMtdyaVv4C5ffyheIECQQDVdVf2Sk113Kke
+PREzEb6XZ0n2ugSG8fWJh2QKUI4RXhg7bDzHhSpexeKsJdoet8NJOUEsXMoqLSzK
+bBnSD63RAkEA1OogtDCkpwkvqC63a7hyDP7qRVHFuVeSA1fu+6BFS0xblkgvcPXT
+J7WbWYcP+lqcLjXWeFsqe5qS6sDCsAhsswJAIumZZHgMqU1Y/9AfIwow8RR8vXT5
+TpT+gur5CtLYGbEZJ4bxffSi1HNrOprKTSHjN/O8XCQlELboz4bUxk24MQJAcsaX
+xKsoR4dTMoWkiSRQDyNoJOA1B3nmk3jWsryuPi42fSgCsxFBt/lVeoitm1c3NE3/
+hLgYibNFGdm52e1gswJBAMwYuImbl6AVLv0Y41smxIkvfAzlyNfTAsp7GqLoMhYN
+q/0KoyI2Ge3+NnmJI/eaiYs8qC2HjrgdX9ZDSUCWfpQ=
+-----END RSA PRIVATE KEY-----
+EOF
+    @public_key=<<EOF
+-----BEGIN PUBLIC KEY-----
+MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCxiGVfRrf90CHmvXa+XYWE4m7L
+Z1slc6cxIYyIgZuQ5T8AeqUakbyYY4wMUR2gZ4pDPs/WGs8fW66q23qmHSr1bQ6H
+aL8znbD7UL/IiiyiW8I11orbrhimIx1A606qi8/0gQc+H851gzUusd5xgKP2X+oP
+xYx3VG3dpksLnNK1IwIDAQAB
+-----END PUBLIC KEY-----
+EOF
+
+      @encrypted_key_pair=<<EOF
+-----BEGIN RSA PRIVATE KEY-----
+Proc-Type: 4,ENCRYPTED
+DEK-Info: AES-256-CBC,EF5CCB3A64C0A6DB57FB924A3ED5B9A6
+
+qziIbWkeBVYS8Lhs3DqW6BeL6/rLDOyLcei604qx/SsmQZfNPb6SfRnq5EWqWk8V
+kHHA9cPb8x8bRNdGiajg4NPwXHlkEBUJkeM8C24MCvPEztM7jooPtmrRR8ilz3m+
+62LyvyzO6LIHonoqOq/jQwfYFOInPTqpwW/drzkFxuh2Mc7enVnU9e+Z5Pnk6I8g
+Sv7Nmh1kMEArzu4vSFBFalBFJkFOXjysOUMhQ7SJwKHmTbKEqcI5Le5NKT708BMa
+xnDzWQQgvKjiOSKz71Gq2QT3hwqV1bgwV015G0xlpWpBhemey4pr6L3AxysWFujO
+z1fHe0MaV6dbQNwymljwdE5R+9jzU8uEmdo8QrrRnzUnetr01uUcWgOUqnKmuinq
+WMl7Odvep6hoBbqSMfESJZJA9+XPBXfs4FHE1Ri8riAPoGLl484Lj91cVqBqVXZG
+tht39kXNYROOqBZ7pU9fNuTFhDHvAoH9ydFD6YpTRZALHTgSdyZ5IbhmOiJAlW3b
+nhAZtMwwcTYJIF8xyR+8GAdAG/dIDFM+tRmeB1aRkSd6IgxLMh52SFv/vSglEwYj
+PYHvhcpId93yYO34vCGT4tGsZ2j2VpZqAyu5cl8K6Hq8dTYzH2jkfSdGQ9a8vCKG
+jSlK4vK91ZFdO8sTCTlQd6+jUXH3B4wTUsA4key7yUGLXMr1jmapRQJIuhCUnQQn
+B9Py5RdGlGW2ycVaGh08n4LmG/OTJuLb+xTStm5w4iLmB+ynDjIxpfQjvX98hzMh
+G35pgQ2GdKs+NByYXZKz0OHT2NAHkKpoO7rPlzTpMLgUtAGmH7rLEeOUz6TscUDc
+-----END RSA PRIVATE KEY-----
+EOF
+    end
+
+    it "should include a means of reading an RSA keypair" do
+      key = CertificateAuthority::KeyMaterial.from_x509_key_pair(@key_pair)
+      key.public_key.should_not be_nil
+      key.public_key.should be_a(OpenSSL::PKey::RSA)
+      key.private_key.should_not be_nil
+      key.private_key.should be_a(OpenSSL::PKey::RSA)
+    end
+
+    it "should include a means of reading encrypted RSA keypairs" do
+      key = CertificateAuthority::KeyMaterial.from_x509_key_pair(@encrypted_key_pair,"meow")
+      key.public_key.should_not be_nil
+      key.public_key.should be_a(OpenSSL::PKey::RSA)
+      key.private_key.should_not be_nil
+      key.private_key.should be_a(OpenSSL::PKey::RSA)
+    end
+
+    it "should raise an exception if you read an encrypted keypair w/ bad password" do
+      lambda {
+        key = CertificateAuthority::KeyMaterial.from_x509_key_pair(@encrypted_key_pair,"wrong")
+      }.should raise_error
+    end
+
+    it "should include a means of reading a public-only PEM formatted key" do
+      key = CertificateAuthority::KeyMaterial.from_x509_public_key(@public_key)
+      key.public_key.should_not be_nil
+      key.public_key.should be_a(OpenSSL::PKey::RSA)
+    end
+  end
 end
 
 describe CertificateAuthority::MemoryKeyMaterial do

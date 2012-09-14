@@ -36,6 +36,11 @@ module CertificateAuthority
       name
     end
 
+    def ==(other)
+      # Use the established OpenSSL comparison
+      self.to_x509_name() == other.to_x509_name()
+    end
+
     def self.from_openssl openssl_name
       unless openssl_name.is_a? OpenSSL::X509::Name
         raise "Argument must be a OpenSSL::X509::Name"

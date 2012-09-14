@@ -193,6 +193,27 @@ These CPSs define what vetting criteria and maintenance practices are required t
 
 [user_notice] This is a nested field containing explicit human readable text if you want to embed a notice in the certificate body related to certification practices. It contains nested attributes of +explicit_text+ for the notice, +organization+ and +notice_numbers+. Refer to the RFC for specific implications of how these are set, but whether or not browsers implement the correct specified behavior for their presence is another issue.
 
+= Certificate Signing Requests (CSRs)
+
+If you want certificate requestors to be able to request certificates without moving the private key you'll need to generate a CSR and submit it to the certificate authority.
+
+Here's an example of using +certificate_authority+ to generate a CSR.
+
+  csr = CertificateAuthority::SigningRequest.new
+  dn = CertificateAuthority::DistinguishedName.new
+  dn.common_name = "localhost"
+  csr.distinguished_name = dn
+  k = CertificateAuthority::MemoryKeyMaterial.new
+  k.generate_key(2048)
+  csr.key_material = k
+  csr.to_x509_csr.to_pem
+
+Similarly, reading a CSR in is as simple as providing the PEM formatted version to +SigningRequest.from_x509_csr+.
+
+  csr = CertificateAuthority::SigningRequest.from_x509_csr(@pem_csr)
+
+Once you have the CSR in the form of a +SigningRequest+ you can transform it to a +Certificate+ with +to_cert+. At this point it works just like any other certificate. You'll have to provide a serial number to actually sign it.
+
 = PKCS#11 Support
 
 If you happen to have a PKCS#11 compliant hardware token you can use +certificate_authority+ to maintain private key materials in hardware security modules. At this point the scope of operating that hardware is out of scope of this README but it's there and it is supported.
@@ -226,11 +247,24 @@ Also of note, I have gotten these to work with 32-bit copies of Ubuntu 10.10 and
 = Coming Soon
 
 * More PKCS#11 hardware (I need driver support from the manufacturers)
+* Actual CRL/OCSP support
+
+= Todone
+
 * Support for working with CSRs to request & issue certificates
 
 = Misc notes
 
 * Firefox will complain about root/intermediate certificates unless both digitalSignature and keyEncipherment are specified as keyUsage attributes. Thanks diogomonica
+
+= Special thanks and Contributions
+
+* Diogo Monica @diogo
+* Justin Cummins @sul3n3t
+* @databus23
+* Colin Jones @trptcolin
+* Eric Monti @emonti
+* TJ Vanderpoel @bougyman
 
 == Meta
 
