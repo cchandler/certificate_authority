@@ -77,12 +77,20 @@ describe "Using OpenSSL" do
           @signed = OpenSSL::X509::Certificate.new(@our_cert.to_pem)
         end
 
-        it "should match the original openssl ca material" do
+        it "should match the original ca's distinguished name" do
+          @our_ca.distinguished_name.to_x509_name.should == @ca.subject
+        end
+
+        it "should match the original openssl ca" do
           back = OpenSSL::X509::Certificate.new(@our_ca.to_pem)
           back.subject.should == @ca.subject
         end
 
-        it "should match the original openssl cert material" do
+        it "should match the original cert's distinguished name" do
+          @our_cert.distinguished_name.to_x509_name.should == @cert.subject
+        end
+
+        it "should match the original openssl cert" do
           back = OpenSSL::X509::Certificate.new(@our_cert.to_pem)
           back.subject.should == @cert.subject
         end
