@@ -15,6 +15,25 @@ module CertificateAuthority
     def is_in_memory?
       raise "Required implementation"
     end
+
+    def self.from_x509_key_pair(pair,password=nil)
+      if password.nil?
+        key = OpenSSL::PKey::RSA.new(pair)
+      else
+        key = OpenSSL::PKey::RSA.new(pair,password)
+      end
+      mem_key = MemoryKeyMaterial.new
+      mem_key.public_key = key.public_key
+      mem_key.private_key = key
+      mem_key
+    end
+
+    def self.from_x509_public_key(public_key_pem)
+      key = OpenSSL::PKey::RSA.new(public_key_pem)
+      signing_request_key = SigningRequestKeyMaterial.new
+      signing_request_key.public_key = key.public_key
+      signing_request_key
+    end
   end
 
   class MemoryKeyMaterial
