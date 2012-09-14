@@ -121,7 +121,14 @@ _EOF_
 
   it "should issue a certificate verified by the issuer" do
     @issued.verify(@issuer.public_key ).should be_true
+  end
+
+  it "should issue a certificate with a matching issuer subject string" do
     @issued.issuer.to_s.should == @issuer.subject.to_s
+  end
+
+  it "should issue a certificate with a matching issuer subject openssl name" do
+    @issued.issuer.should == @issuer.subject
   end
 end
 
