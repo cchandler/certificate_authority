@@ -22,6 +22,9 @@ module CertificateAuthority
     attr_accessor :organizational_unit
     alias :ou :organizational_unit
 
+    attr_accessor :email_address
+    alias :emailAddress :email_address
+
     def to_x509_name
       raise "Invalid Distinguished Name" unless valid?
 
@@ -30,9 +33,10 @@ module CertificateAuthority
       name.add_entry("C", country) unless country.blank?
       name.add_entry("ST", state) unless state.blank?
       name.add_entry("L", locality) unless locality.blank?
-      name.add_entry("OU", organizational_unit) unless organizational_unit.blank?
       name.add_entry("O", organization) unless organization.blank?
+      name.add_entry("OU", organizational_unit) unless organizational_unit.blank?
       name.add_entry("CN", common_name)
+      name.add_entry("emailAddress", email_address) unless email_address.blank?
       name
     end
 
@@ -55,6 +59,7 @@ module CertificateAuthority
         when "C" then name.country = v
         when "O" then name.organization = v
         when "OU" then name.organizational_unit = v
+        when "emailAddress" then name.email_address = v
         end
       end
       name

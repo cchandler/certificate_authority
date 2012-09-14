@@ -14,29 +14,46 @@ describe "Using OpenSSL" do
     it "should issue a certificate with a matching issuer subject openssl name" do
       @signed.issuer.should == @issuer.subject
     end
+
   end
 
-  context "Signing a CSR with CertificateAuthority" do
-    before :all do
-      @ca_cert = sample_file("certs/ca.crt").read
-      @ca_key = sample_file("certs/ca.key").read
-      @csr_pem = sample_file("certs/client.csr").read
+  context "Singing CSRs" do
+    shared_examples_for "a csr operation" do
+      before :all do
+        @ca = sample_file("certs/ca.crt").read
+        @ca_key = sample_file("certs/ca.key").read
 
-      @issuer = OpenSSL::X509::Certificate.new(@ca_cert)
-      issuer_ca = CertificateAuthority::Certificate.from_openssl(@issuer)
-      issuer_ca.key_material.private_key = OpenSSL::PKey::RSA.new(@ca_key)
+        @issuer = OpenSSL::X509::Certificate.new(@ca)
+        issuer_ca = CertificateAuthority::Certificate.from_openssl(@issuer)
+        issuer_ca.key_material.private_key = OpenSSL::PKey::RSA.new(@ca_key)
 
-      csr = CertificateAuthority::SigningRequest.from_x509_csr(@csr_pem)
-      signed = csr.to_cert
-      signed.parent = issuer_ca
-      signed.serial_number.number = 2
+        @our_csr = CertificateAuthority::SigningRequest.from_x509_csr(@csr_pem)
+        signed = @our_csr.to_cert
+        signed.parent = issuer_ca
+        signed.serial_number.number = 2
 
-      signed.sign!
+        signed.sign!
 
-      @signed = OpenSSL::X509::Certificate.new(signed.to_pem)
+        @cert = @signed = OpenSSL::X509::Certificate.new(signed.to_pem)
+      end
+      it_should_behave_like "an ossl issuer and its signed cert"
     end
-    
-    it_should_behave_like "an ossl issuer and its signed cert"
+
+    context "With a server CSR" do
+      before :all do
+        @csr_pem = sample_file("certs/server.csr").read
+      end
+
+      it_should_behave_like "a csr operation"
+    end
+
+    context "With a client CSR" do
+      before :all do
+        @csr_pem = sample_file("certs/client.csr").read
+      end
+
+      it_should_behave_like "a csr operation"
+    end
   end
 
   context "Handling externally supplied CAs and certs" do
@@ -51,14 +68,25 @@ describe "Using OpenSSL" do
 
       context "using certificate_authority" do
         before :all do
-          @issuer = @ca
-
           # from openssl
-          intermediate = CertificateAuthority::Certificate.from_openssl(@cert)
+          @our_ca = CertificateAuthority::Certificate.from_openssl(@ca)
+          @our_cert = CertificateAuthority::Certificate.from_openssl(@cert)
 
           # and back
-          @signed = OpenSSL::X509::Certificate.new(intermediate.to_pem)
+          @issuer = OpenSSL::X509::Certificate.new(@our_ca.to_pem)
+          @signed = OpenSSL::X509::Certificate.new(@our_cert.to_pem)
         end
+
+        it "should match the original openssl ca material" do
+          back = OpenSSL::X509::Certificate.new(@our_ca.to_pem)
+          back.subject.should == @ca.subject
+        end
+
+        it "should match the original openssl cert material" do
+          back = OpenSSL::X509::Certificate.new(@our_cert.to_pem)
+          back.subject.should == @cert.subject
+        end
+
         it_should_behave_like "an ossl issuer and its signed cert"
       end
     end
