@@ -81,11 +81,34 @@ describe CertificateAuthority::OCSPResponseBuilder do
     response.basic.verify([root_cert],store).should be_true
   end
 
+  it "should have a configurable nextUpdate" do
+    time = 30 * 60 # 30 minutes
+    @response_builder.next_update=time
+    response = @response_builder.build_response
+    response.basic.status.each do |status|
+      ## 3 seconds of wabble is OK
+      status[5].should be_within(3).of(status[4] + time)
+    end
+  end
+
   describe "verification mechanisms" do
-    it "should support a verification mechanism callback" do
-      verification = lambda {|serial_number| CertificateAuthority::OCSPResponseBuilder::REVOKED }
+    it "should support an everything's OK default (though somewhat useless)" do
+      response = @response_builder.build_response
+      response.basic.status.each do |status|
+        status[1].should == OpenSSL::OCSP::V_CERTSTATUS_GOOD
+      end
+    end
+
+    it "should support an overridable verification mechanism callback" do
+      verification = lambda {|serial_number|
+        [CertificateAuthority::OCSPResponseBuilder::REVOKED,CertificateAuthority::OCSPResponseBuilder::UNSPECIFIED]
+      }
       @response_builder.verification_mechanism = verification
-      @response_builder.build_response
+      response = @response_builder.build_response
+
+      response.basic.status.each do |status|
+        status[1].should == OpenSSL::OCSP::V_CERTSTATUS_REVOKED
+      end
     end
   end
 end

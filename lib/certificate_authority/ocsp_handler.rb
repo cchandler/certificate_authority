@@ -4,24 +4,30 @@ module CertificateAuthority
     attr_accessor :verification_mechanism
     attr_accessor :ocsp_request_reader
     attr_accessor :parent
+    attr_accessor :next_update
 
     GOOD = OpenSSL::OCSP::V_CERTSTATUS_GOOD
     REVOKED = OpenSSL::OCSP::V_CERTSTATUS_REVOKED
+
+    NO_REASON=0
+    KEY_COMPROMISED=OpenSSL::OCSP::REVOKED_STATUS_KEYCOMPROMISE
+    UNSPECIFIED=OpenSSL::OCSP::REVOKED_STATUS_UNSPECIFIED
 
     def build_response()
       raise "Requires a parent for signing" if @parent.nil?
       if @verification_mechanism.nil?
         ## If no verification callback is provided we're marking it GOOD
-        @verification_mechanism = lambda {|cert_id| GOOD }
+        @verification_mechanism = lambda {|cert_id| [GOOD,NO_REASON] }
       end
 
       @ocsp_request_reader.ocsp_request.certid.each do |cert_id|
-        result = verification_mechanism.call(cert_id.serial)
+        result,reason = verification_mechanism.call(cert_id.serial)
 
         ## cert_id, status, reason, rev_time, this update, next update, ext
+        ## - unit of time is seconds
         @ocsp_response.add_status(cert_id,
-        result, 0,
-          0, 0, 30, nil)
+        result, reason,
+          0, 0, @next_update, nil)
       end
 
       @ocsp_response.sign(OpenSSL::X509::Certificate.new(@parent.to_pem), @parent.key_material.private_key, nil, nil)
@@ -35,6 +41,7 @@ module CertificateAuthority
       ocsp_response = OpenSSL::OCSP::BasicResponse.new
       ocsp_response.copy_nonce(request_reader.ocsp_request)
       response_builder.ocsp_response = ocsp_response
+      response_builder.next_update = 60*15 #Default of 15 minutes
       response_builder
     end
   end
