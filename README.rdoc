@@ -214,6 +214,22 @@ Similarly, reading a CSR in is as simple as providing the PEM formatted version 
 
 Once you have the CSR in the form of a +SigningRequest+ you can transform it to a +Certificate+ with +to_cert+. At this point it works just like any other certificate. You'll have to provide a serial number to actually sign it.
 
+= Certificate Revocation Lists (CRLs)
+
+Revocation lists let clients know when a certificate in the wild should no longer be trusted.
+
+Like end-user certificates, CRLs have to be signed by a signing authority to be valid. Additionally, you will need to furnish a +nextUpdate+ value that indicates to the client when it should look for updates to the CRL and how long it should consider a cached value valid.
+
+Ideally you would place the result CRL somewhere generally accessible on the Internet and reference the URI in the +crlDistributionPoints+ extension on issued certificates.
+
+  crl = CertificateAuthority::CertificateRevocationList.new
+  crl << certificate # Some CertificateAuthority::Certificate
+  crl << serial_number # Also works with plain CertificateAuthority::SerialNumber
+  crl.parent = root_certificate # A valid root
+  crl.next_update = (60 * 60 * 10) # 10 Hours
+  crl.sign!
+  crl.to_pem
+
 = PKCS#11 Support
 
 If you happen to have a PKCS#11 compliant hardware token you can use +certificate_authority+ to maintain private key materials in hardware security modules. At this point the scope of operating that hardware is out of scope of this README but it's there and it is supported.
@@ -247,7 +263,7 @@ Also of note, I have gotten these to work with 32-bit copies of Ubuntu 10.10 and
 = Coming Soon
 
 * More PKCS#11 hardware (I need driver support from the manufacturers)
-* Actual CRL/OCSP support
+* Actual OCSP support
 
 = Todone
 

@@ -6,6 +6,7 @@ require 'active_model'
 
 #Internal modules
 require 'certificate_authority/signing_entity'
+require 'certificate_authority/revocable'
 require 'certificate_authority/distinguished_name'
 require 'certificate_authority/serial_number'
 require 'certificate_authority/key_material'

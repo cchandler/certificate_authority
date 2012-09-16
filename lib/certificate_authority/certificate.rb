@@ -1,14 +1,13 @@
 module CertificateAuthority
   class Certificate
-    # include SigningEntity
     include ActiveModel::Validations
+    include Revocable
 
     attr_accessor :distinguished_name
     attr_accessor :serial_number
     attr_accessor :key_material
     attr_accessor :not_before
     attr_accessor :not_after
-    attr_accessor :revoked_at
     attr_accessor :extensions
     attr_accessor :openssl_body
 

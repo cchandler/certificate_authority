@@ -1,6 +1,7 @@
 module CertificateAuthority
   class SerialNumber
     include ActiveModel::Validations
+    include Revocable
 
     attr_accessor :number
 
