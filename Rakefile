@@ -24,7 +24,7 @@ Jeweler::Tasks.new do |gem|
   gem.license = "MIT"
   gem.summary = 'Ruby gem for managing the core functions outlined in RFC-3280 for PKI'
   # gem.description = ''
-  gem.email = "chris@flatterline.com"
+  gem.email = "squanderingtime@gmail.com"
   gem.authors = ["Chris Chandler"]
   
   # gem.add_dependency('activemodel', '3.0.6')
