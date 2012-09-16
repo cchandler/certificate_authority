@@ -251,20 +251,27 @@ describe CertificateAuthority::Certificate do
       end
 
       it "should contain a nested userNotice if specified" do
-        pending
-        # @certificate.sign!({
-        #   "extensions" => {
-        #     "certificatePolicies" => {
-        #       "policy_identifier" => "1.3.5.7",
-        #       "cps_uris" => ["http://my.host.name/", "http://my.your.name/"],
-        #       "user_notice" => {
-        #        "explicit_text" => "Testing!", "organization" => "RSpec Test organization name", "notice_numbers" => "1,2,3,4"
-        #       }
-        #     }
-        #   }
-        # })
-        # cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
-        # cert.extensions.map(&:oid).include?("certificatePolicies").should be_true
+        #pending
+         @certificate.sign!({
+           "extensions" => {
+             "certificatePolicies" => {
+               "policy_identifier" => "1.3.5.7",
+               "cps_uris" => ["http://my.host.name/", "http://my.your.name/"],
+               "user_notice" => {
+                "explicit_text" => "Testing explicit text!", "organization" => "RSpec Test organization name", "notice_numbers" => "1,2,3,4"
+               }
+             }
+           }
+         })
+         cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
+         cert.extensions.map(&:oid).include?("certificatePolicies").should be_true
+         ## Checking OIDs after they've run through OpenSSL is a pain...
+         ## The nicely structured data will be flattened to a single String
+         cert.extensions.each do |ext|
+           if ext.oid == "certificatePolicies"
+             ext.to_a[1].should include("Testing explicit text!")
+           end
+         end
       end
 
       it "should NOT include a certificatePolicy if not specified" do
