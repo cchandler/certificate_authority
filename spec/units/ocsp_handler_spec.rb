@@ -1,18 +1,16 @@
 require File.dirname(__FILE__) + '/units_helper'
 
-describe CertificateAuthority::OCSPHandler do
+describe CertificateAuthority::OCSPRequestReader do
   before(:each) do
-    @ocsp_handler = CertificateAuthority::OCSPHandler.new
-
     @root_certificate = CertificateAuthority::Certificate.new
     @root_certificate.signing_entity = true
     @root_certificate.subject.common_name = "OCSP Root"
-    @root_certificate.key_material.generate_key(1024)
+    @root_certificate.key_material.generate_key(768)
     @root_certificate.serial_number.number = 1
     @root_certificate.sign!
 
     @certificate = CertificateAuthority::Certificate.new
-    @certificate.key_material.generate_key(1024)
+    @certificate.key_material.generate_key(768)
     @certificate.subject.common_name = "http://questionablesite.com"
     @certificate.parent = @root_certificate
     @certificate.serial_number.number = 2
@@ -24,6 +22,100 @@ describe CertificateAuthority::OCSPHandler do
 
     cert_id = OpenSSL::OCSP::CertificateId.new(openssl_cert_subject, openssl_cert_issuer)
     @ocsp_request.add_certid(cert_id)
+    @ocsp_request_reader = CertificateAuthority::OCSPRequestReader.from_der(@ocsp_request.to_der)
+  end
+
+  it "should read in the DER encoded body" do
+    @ocsp_request_reader.should_not be_nil
+  end
+
+  it "should read out certificate serial numbers" do
+    @ocsp_request_reader.serial_numbers.should == [2]
+  end
+end
+
+describe CertificateAuthority::OCSPResponseBuilder do
+  before(:each) do
+    @root_certificate = CertificateAuthority::Certificate.new
+    @root_certificate.signing_entity = true
+    @root_certificate.subject.common_name = "OCSP Root"
+    @root_certificate.key_material.generate_key(768)
+    @root_certificate.serial_number.number = 1
+    @root_certificate.sign!({"extensions" => {"keyUsage" => {"usage" => ["critical", "keyCertSign"] }} })
+
+    @certificate = CertificateAuthority::Certificate.new
+    @certificate.key_material.generate_key(768)
+    @certificate.subject.common_name = "http://questionablesite.com"
+    @certificate.parent = @root_certificate
+    @certificate.serial_number.number = 2
+    @certificate.sign!
+
+    @ocsp_request = OpenSSL::OCSP::Request.new
+    @ocsp_request.add_nonce
+    openssl_cert_issuer = OpenSSL::X509::Certificate.new(@root_certificate.to_pem)
+    openssl_cert_subject = OpenSSL::X509::Certificate.new(@certificate.to_pem)
+
+    cert_id = OpenSSL::OCSP::CertificateId.new(openssl_cert_subject, openssl_cert_issuer)
+    @ocsp_request.add_certid(cert_id)
+    @ocsp_request_reader = CertificateAuthority::OCSPRequestReader.from_der(@ocsp_request.to_der)
+
+    @response_builder = CertificateAuthority::OCSPResponseBuilder.from_request_reader(@ocsp_request_reader)
+    @response_builder.parent = @root_certificate
+  end
+
+  it "should build from a OCSPRequestReader" do
+    @response_builder.should_not be_nil
+    @response_builder.should be_a(CertificateAuthority::OCSPResponseBuilder)
+  end
+
+  it "should build a response" do
+    response = @response_builder.build_response
+    response.should be_a(OpenSSL::OCSP::Response)
+  end
+
+  it "should verify against the root" do
+    response = @response_builder.build_response
+    root_cert = OpenSSL::X509::Certificate.new(@root_certificate.to_pem)
+    store = OpenSSL::X509::Store.new
+    store.add_cert(root_cert)
+    response.basic.verify([root_cert],store).should be_true
+  end
+
+  describe "verification mechanisms" do
+    it "should support a verification mechanism callback" do
+      verification = lambda {|serial_number| CertificateAuthority::OCSPResponseBuilder::REVOKED }
+      @response_builder.verification_mechanism = verification
+      @response_builder.build_response
+    end
+  end
+end
+
+
+## DEPRECATED
+describe CertificateAuthority::OCSPHandler do
+  before(:each) do
+    @ocsp_handler = CertificateAuthority::OCSPHandler.new
+    @root_certificate = CertificateAuthority::Certificate.new
+    @root_certificate.signing_entity = true
+    @root_certificate.subject.common_name = "OCSP Root"
+    @root_certificate.key_material.generate_key(768)
+    @root_certificate.serial_number.number = 1
+    @root_certificate.sign!
+
+    @certificate = CertificateAuthority::Certificate.new
+    @certificate.key_material.generate_key(768)
+    @certificate.subject.common_name = "http://questionablesite.com"
+    @certificate.parent = @root_certificate
+    @certificate.serial_number.number = 2
+    @certificate.sign!
+
+    @ocsp_request = OpenSSL::OCSP::Request.new
+    openssl_cert_issuer = OpenSSL::X509::Certificate.new(@root_certificate.to_pem)
+    openssl_cert_subject = OpenSSL::X509::Certificate.new(@certificate.to_pem)
+
+    cert_id = OpenSSL::OCSP::CertificateId.new(openssl_cert_subject, openssl_cert_issuer)
+    @ocsp_request.add_certid(cert_id)
+
     @ocsp_handler.ocsp_request = @ocsp_request.to_der
   end
 

@@ -1,4 +1,64 @@
 module CertificateAuthority
+  class OCSPResponseBuilder
+    attr_accessor :ocsp_response
+    attr_accessor :verification_mechanism
+    attr_accessor :ocsp_request_reader
+    attr_accessor :parent
+
+    GOOD = OpenSSL::OCSP::V_CERTSTATUS_GOOD
+    REVOKED = OpenSSL::OCSP::V_CERTSTATUS_REVOKED
+
+    def build_response()
+      raise "Requires a parent for signing" if @parent.nil?
+      if @verification_mechanism.nil?
+        ## If no verification callback is provided we're marking it GOOD
+        @verification_mechanism = lambda {|cert_id| GOOD }
+      end
+
+      @ocsp_request_reader.ocsp_request.certid.each do |cert_id|
+        result = verification_mechanism.call(cert_id.serial)
+
+        ## cert_id, status, reason, rev_time, this update, next update, ext
+        @ocsp_response.add_status(cert_id,
+        result, 0,
+          0, 0, 30, nil)
+      end
+
+      @ocsp_response.sign(OpenSSL::X509::Certificate.new(@parent.to_pem), @parent.key_material.private_key, nil, nil)
+      OpenSSL::OCSP::Response.create(OpenSSL::OCSP::RESPONSE_STATUS_SUCCESSFUL, @ocsp_response)
+    end
+
+    def self.from_request_reader(request_reader,verification_mechanism=nil)
+      response_builder = OCSPResponseBuilder.new
+      response_builder.ocsp_request_reader = request_reader
+
+      ocsp_response = OpenSSL::OCSP::BasicResponse.new
+      ocsp_response.copy_nonce(request_reader.ocsp_request)
+      response_builder.ocsp_response = ocsp_response
+      response_builder
+    end
+  end
+
+  class OCSPRequestReader
+    attr_accessor :raw_ocsp_request
+    attr_accessor :ocsp_request
+
+    def serial_numbers
+      @ocsp_request.certid.collect do |cert_id|
+        cert_id.serial
+      end
+    end
+
+    def self.from_der(request_body)
+      reader = OCSPRequestReader.new
+      reader.raw_ocsp_request = request_body
+      reader.ocsp_request = OpenSSL::OCSP::Request.new(request_body)
+
+      reader
+    end
+  end
+
+  ## DEPRECATED
   class OCSPHandler
     include ActiveModel::Validations
 
@@ -24,8 +84,7 @@ module CertificateAuthority
     end
 
     def extract_certificate_serials
-      raise "No valid OCSP request was supplied" if self.ocsp_request.nil?
-      openssl_request = OpenSSL::OCSP::Request.new(self.ocsp_request)
+      openssl_request = OpenSSL::OCSP::Request.new(@ocsp_request)
 
       self.certificate_ids = openssl_request.certid.collect do |cert_id|
         cert_id.serial
