@@ -60,7 +60,7 @@ Maybe you don't want to actually sign certificates with your super-secret root c
   signing_profile = {"extensions" => {"keyUsage" => {"usage" => ["critical", "keyCertSign"] }} }
   intermediate.sign!(signing_profile)
 
-All we have to do is create another certificate like we did with the root. In this example we gave it the next available serial number which for us, was 2.  We then generate (and save!) key material for this new entity.  Even the +signing_entity+ is set to true so this certificate can sign other certificates.  The difference here is that the +parent+ field is set to the root. Going forward, whatever entity you want to sign a certificate, you set that entity to be the parent. In this case, our root will be responsible for signing this intermediate when we call +sign!+.
+All we have to do is create another certificate like we did with the root. In this example we gave it the next available serial number, which for us, was 2.  We then generate (and save!) key material for this new entity.  Even the +signing_entity+ is set to true so this certificate can sign other certificates.  The difference here is that the +parent+ field is set to the root. Going forward, whatever entity you want to sign a certificate, you set that entity to be the parent. In this case, our root will be responsible for signing this intermediate when we call +sign!+.
 
 = Creating new certificates (in general)
 
@@ -230,6 +230,40 @@ Ideally you would place the result CRL somewhere generally accessible on the Int
   crl.sign!
   crl.to_pem
 
+= OCSP Support
+
+OCSP is the Online Certificate Status Protocol. It provides a mechanism to query an authority to see if a certificate is still valid without downloading an entire CRL. To use this mechanism you provide a URI in the Authority Information Access extension.
+If a client wishes to check the validity of a certificate they can query this endpoint.
+This request will only contain serial numbers, so you'll need to uniquely identify your authority in the AIA path.
+
+If a client sends you a DER encoded OCSP request you can read it out via +OCSPRequestReader+
+
+  ocsp_request_reader = CertificateAuthority::OCSPRequestReader.from_der(@ocsp_request.to_der)
+  ocsp_request_reader.serial_numbers
+
+Then, you can construct a response like this
+
+  response_builder = CertificateAuthority::OCSPResponseBuilder.from_request_reader(ocsp_request_reader)
+  response_builder.parent = root
+  response = response_builder.build_response # Returns OpenSSL::OCSP::Response
+  response.to_der
+
+The response builder will copy a (possible) nonce from the request. By default, the +OCSPResponseBuilder+ will say that every certificate is GOOD.
+You should definitely override this if you plan on revoking certificates.
+If you want to override this you'll need to supply a proc/lambda that takes a serial number and returns an array of status and reason.
+
+  response_builder = CertificateAuthority::OCSPResponseBuilder.from_request_reader(ocsp_request_reader)
+  response_builder.verification_mechanism = lambda {|certid|
+    [CertificateAuthority::OCSPResponseBuilder::REVOKED,CertificateAuthority::OCSPResponseBuilder::UNSPECIFIED]
+  }
+  response_builder.parent = root
+  response = response_builder.build_response # Response will say everything is revoked for unspecified reasons
+
+Lastly, you can configure a nextUpdate time in the response. This is the length of time for which a client may consider this response valid.
+The default is 15 minutes.
+
+  response_builder.next_update = 30 * 60 # 30 minutes
+
 = PKCS#11 Support
 
 If you happen to have a PKCS#11 compliant hardware token you can use +certificate_authority+ to maintain private key materials in hardware security modules. At this point the scope of operating that hardware is out of scope of this README but it's there and it is supported.
@@ -260,14 +294,14 @@ Your current version of OpenSSL _must_ include dynamic engine support and you wi
 
 Also of note, I have gotten these to work with 32-bit copies of Ubuntu 10.10 and pre-Snow Leopard versions of OS X. If you are running Snow Leopard you're out of luck since none of the companies I've contacted make a 64 bit driver.
 
-= Coming Soon
+= Hopefully in the future
 
 * More PKCS#11 hardware (I need driver support from the manufacturers)
-* Actual OCSP support
 
 = Todone
 
 * Support for working with CSRs to request & issue certificates
+* OCSP support
 
 = Misc notes
 

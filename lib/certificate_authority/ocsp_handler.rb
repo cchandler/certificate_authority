@@ -25,6 +25,7 @@ module CertificateAuthority
 
         ## cert_id, status, reason, rev_time, this update, next update, ext
         ## - unit of time is seconds
+        ## - rev_time is currently set to "now"
         @ocsp_response.add_status(cert_id,
         result, reason,
           0, 0, @next_update, nil)
