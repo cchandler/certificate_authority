@@ -14,7 +14,7 @@ module CertificateAuthority
       end
     end
 
-    class BasicContraints
+    class BasicConstraints
       include ExtensionAPI
       include ActiveModel::Validations
       attr_accessor :ca

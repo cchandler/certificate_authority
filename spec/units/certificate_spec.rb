@@ -282,7 +282,7 @@ describe CertificateAuthority::Certificate do
     end
 
 
-    it "should support BasicContraints" do
+    it "should support BasicConstraints" do
       cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
       cert.extensions.map(&:oid).include?("basicConstraints").should be_true
     end

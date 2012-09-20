@@ -1,28 +1,28 @@
 require File.dirname(__FILE__) + '/units_helper'
 
 describe CertificateAuthority::Extensions do
-  describe CertificateAuthority::Extensions::BasicContraints do
+  describe CertificateAuthority::Extensions::BasicConstraints do
     it "should only allow true/false" do
-      basic_constraints = CertificateAuthority::Extensions::BasicContraints.new
+      basic_constraints = CertificateAuthority::Extensions::BasicConstraints.new
       basic_constraints.valid?.should be_true
       basic_constraints.ca = "moo"
       basic_constraints.valid?.should be_false
     end
 
     it "should respond to :path_len" do
-      basic_constraints = CertificateAuthority::Extensions::BasicContraints.new
+      basic_constraints = CertificateAuthority::Extensions::BasicConstraints.new
       basic_constraints.respond_to?(:path_len).should be_true
     end
 
     it "should raise an error if :path_len isn't a non-negative integer" do
-      basic_constraints = CertificateAuthority::Extensions::BasicContraints.new
+      basic_constraints = CertificateAuthority::Extensions::BasicConstraints.new
       lambda {basic_constraints.path_len = "moo"}.should raise_error
       lambda {basic_constraints.path_len = -1}.should raise_error
       lambda {basic_constraints.path_len = 1.5}.should raise_error
     end
 
     it "should generate a proper OpenSSL extension string" do
-      basic_constraints = CertificateAuthority::Extensions::BasicContraints.new
+      basic_constraints = CertificateAuthority::Extensions::BasicConstraints.new
       basic_constraints.ca = true
       basic_constraints.path_len = 2
       basic_constraints.to_s.should == "CA:true,pathlen:2"

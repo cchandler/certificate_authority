@@ -146,7 +146,7 @@ module CertificateAuthority
       extension_hash = {}
 
       temp_extensions = []
-      basic_constraints = CertificateAuthority::Extensions::BasicContraints.new
+      basic_constraints = CertificateAuthority::Extensions::BasicConstraints.new
       temp_extensions << basic_constraints
       crl_distribution_points = CertificateAuthority::Extensions::CrlDistributionPoints.new
       temp_extensions << crl_distribution_points
