@@ -4,6 +4,7 @@ module CertificateAuthority
     attr_accessor :key_material
     attr_accessor :raw_body
     attr_accessor :openssl_csr
+    attr_accessor :digest
 
     def to_cert
       cert = Certificate.new
@@ -14,14 +15,20 @@ module CertificateAuthority
       cert
     end
 
+    def to_pem
+      to_x509_csr.to_pem
+    end
+
     def to_x509_csr
       raise "Must specify a DN/subject on csr" if @distinguished_name.nil?
       raise "Invalid DN in request" unless @distinguished_name.valid?
       raise "CSR must have key material" if @key_material.nil?
       raise "CSR must include a public key on key material" if @key_material.public_key.nil?
+
       opensslcsr = OpenSSL::X509::Request.new
       opensslcsr.subject = @distinguished_name.to_x509_name
       opensslcsr.public_key = @key_material.public_key
+      opensslcsr.sign @key_material.private_key, OpenSSL::Digest::Digest.new(@digest || "SHA512")
       opensslcsr
     end
 
