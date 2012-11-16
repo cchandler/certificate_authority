@@ -98,12 +98,8 @@ EOF
   end
 
   describe "Generating CSRs" do
-    it "should generate a csr" do
-      csr = CertificateAuthority::SigningRequest.new
-      dn = CertificateAuthority::DistinguishedName.new
-      dn.common_name = "localhost"
-      csr.distinguished_name = dn
-      key_pair =<<EOF
+    before(:each) do
+      @key_pair =<<EOF
 -----BEGIN RSA PRIVATE KEY-----
 MIICXAIBAAKBgQCxiGVfRrf90CHmvXa+XYWE4m7LZ1slc6cxIYyIgZuQ5T8AeqUa
 kbyYY4wMUR2gZ4pDPs/WGs8fW66q23qmHSr1bQ6HaL8znbD7UL/IiiyiW8I11orb
@@ -120,18 +116,34 @@ hLgYibNFGdm52e1gswJBAMwYuImbl6AVLv0Y41smxIkvfAzlyNfTAsp7GqLoMhYN
 q/0KoyI2Ge3+NnmJI/eaiYs8qC2HjrgdX9ZDSUCWfpQ=
 -----END RSA PRIVATE KEY-----
 EOF
-      k = CertificateAuthority::KeyMaterial.from_x509_key_pair(key_pair)
-      csr.key_material = k
+      @csr = CertificateAuthority::SigningRequest.new
+      dn = CertificateAuthority::DistinguishedName.new
+      dn.common_name = "localhost"
+      @csr.distinguished_name = dn
+
+      k = CertificateAuthority::KeyMaterial.from_x509_key_pair(@key_pair)
+      @csr.key_material = k
+    end
+
+    it "should generate a CSR" do
       expected =<<EOF
 -----BEGIN CERTIFICATE REQUEST-----
-MIHHMIG8AgAwFDESMBAGA1UEAwwJbG9jYWxob3N0MIGfMA0GCSqGSIb3DQEBAQUA
-A4GNADCBiQKBgQCxiGVfRrf90CHmvXa+XYWE4m7LZ1slc6cxIYyIgZuQ5T8AeqUa
-kbyYY4wMUR2gZ4pDPs/WGs8fW66q23qmHSr1bQ6HaL8znbD7UL/IiiyiW8I11orb
-rhimIx1A606qi8/0gQc+H851gzUusd5xgKP2X+oPxYx3VG3dpksLnNK1IwIDAQAB
-oAAwAwYBAAMBAA==
+MIIBUjCBvAIAMBQxEjAQBgNVBAMMCWxvY2FsaG9zdDCBnzANBgkqhkiG9w0BAQEF
+AAOBjQAwgYkCgYEAsYhlX0a3/dAh5r12vl2FhOJuy2dbJXOnMSGMiIGbkOU/AHql
+GpG8mGOMDFEdoGeKQz7P1hrPH1uuqtt6ph0q9W0Oh2i/M52w+1C/yIosolvCNdaK
+264YpiMdQOtOqovP9IEHPh/OdYM1LrHecYCj9l/qD8WMd1Rt3aZLC5zStSMCAwEA
+AaAAMA0GCSqGSIb3DQEBDQUAA4GBAICefvxP71/1uA5PG0tH2WbgDVF/pDPM+ff3
+zdRuK6rpkUfDdtR4AwyEqNYptnPF8s/VDGI35JYzaTZZm/KXovupPWPccKHI/wKG
+C4rJCPgEvyfe5Uce/sQHrnNbW4zJcPbw78lGrbop2k1tHbwY9QGha8Tj8ico7wu0
+vvJ0eOXh
 -----END CERTIFICATE REQUEST-----
 EOF
-      csr.to_x509_csr.to_pem.should == expected
+      @csr.to_pem.should == expected
+    end
+
+    it "should generate a signed CSR" do
+      @csr.digest = "SHA256"
+      @csr.to_x509_csr.signature_algorithm.should == "sha256WithRSAEncryption"
     end
   end
 end

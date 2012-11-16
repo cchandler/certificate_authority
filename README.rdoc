@@ -206,6 +206,7 @@ Here's an example of using +certificate_authority+ to generate a CSR.
   k = CertificateAuthority::MemoryKeyMaterial.new
   k.generate_key(2048)
   csr.key_material = k
+  csr.digest = "SHA256"
   csr.to_x509_csr.to_pem
 
 Similarly, reading a CSR in is as simple as providing the PEM formatted version to +SigningRequest.from_x509_csr+.
