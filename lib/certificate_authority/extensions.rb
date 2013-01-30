@@ -14,6 +14,11 @@ module CertificateAuthority
       end
     end
 
+    # Specifies whether an X.509v3 certificate can act as a CA, signing other
+    # certificates to be verified. If set, a path length constraint can also be
+    # specified.
+    # Reference: Section 4.2.1.10 of RFC3280
+    # http://tools.ietf.org/html/rfc3280#section-4.2.1.10
     class BasicConstraints
       include ExtensionAPI
       include ActiveModel::Validations
@@ -46,6 +51,10 @@ module CertificateAuthority
       end
     end
 
+    # Specifies where CRL information be be retrieved. This extension isn't
+    # critical, but is recommended for proper CAs.
+    # Reference: Section 4.2.1.14 of RFC3280
+    # http://tools.ietf.org/html/rfc3280#section-4.2.1.14
     class CrlDistributionPoints
       include ExtensionAPI
 
@@ -75,6 +84,10 @@ module CertificateAuthority
       end
     end
 
+    # Identifies the public key associated with a given certificate.
+    # Should be required for "CA" certificates.
+    # Reference: Section 4.2.1.2 of RFC3280
+    # http://tools.ietf.org/html/rfc3280#section-4.2.1.2
     class SubjectKeyIdentifier
       include ExtensionAPI
       def openssl_identifier
@@ -86,6 +99,9 @@ module CertificateAuthority
       end
     end
 
+    # Used to identify the keypair used to sign CRLs.
+    # Reference: Section 5.2.1 of RFC3280
+    # http://tools.ietf.org/html/rfc3280#section-5.2.1
     class AuthorityKeyIdentifier
       include ExtensionAPI
 
@@ -98,6 +114,11 @@ module CertificateAuthority
       end
     end
 
+    # Specifies how to access CA information and services for the CA that
+    # issued this certificate.
+    # Generally used to specify OCSP servers.
+    # Reference: Section 4.2.2.1 of RFC3280
+    # http://tools.ietf.org/html/rfc3280#section-4.2.2.1
     class AuthorityInfoAccess
       include ExtensionAPI
 
@@ -117,6 +138,9 @@ module CertificateAuthority
       end
     end
 
+    # Specifies the allowed usage purposes of the keypair specified in this certificate.
+    # Reference: Section 4.2.1.3 of RFC3280
+    # http://tools.ietf.org/html/rfc3280#section-4.2.1.3
     class KeyUsage
       include ExtensionAPI
 
@@ -135,6 +159,10 @@ module CertificateAuthority
       end
     end
 
+    # Specifies even more allowed usages in addition to what is specified in
+    # the Key Usage extension.
+    # Reference: Section 4.2.1.13 of RFC3280
+    # http://tools.ietf.org/html/rfc3280#section-4.2.1.13
     class ExtendedKeyUsage
       include ExtensionAPI
 
@@ -153,6 +181,9 @@ module CertificateAuthority
       end
     end
 
+    # Specifies additional "names" for which this certificate is valid.
+    # Reference: Section 4.2.1.7 of RFC3280
+    # http://tools.ietf.org/html/rfc3280#section-4.2.1.7
     class SubjectAlternativeName
       include ExtensionAPI
 
