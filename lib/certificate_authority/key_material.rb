@@ -111,38 +111,4 @@ module CertificateAuthority
       @public_key
     end
   end
-
-  class SigningRequestKeyMaterial
-    include KeyMaterial
-    include ActiveModel::Validations
-
-    validates_each :public_key do |record, attr, value|
-      record.errors.add :public_key, "cannot be blank" if record.public_key.nil?
-    end
-
-    attr_accessor :public_key
-
-    def initialize(request=nil)
-      if request.is_a? OpenSSL::X509::Request
-        raise "Invalid certificate signing request" unless request.verify request.public_key
-        self.public_key = request.public_key
-      end
-    end
-
-    def is_in_hardware?
-      false
-    end
-
-    def is_in_memory?
-      true
-    end
-
-    def private_key
-      nil
-    end
-
-    def public_key
-      @public_key
-    end
-  end
 end
