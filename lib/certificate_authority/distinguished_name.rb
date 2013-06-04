@@ -32,11 +32,16 @@ module CertificateAuthority
     alias :emailAddress :email_address
     alias :emailAddress= :email_address=
 
+    attr_accessor :serial_number
+    alias :serialNumber :serial_number
+    alias :serialNumber= :serial_number=
+
     def to_x509_name
       raise "Invalid Distinguished Name" unless valid?
 
       # NB: the capitalization in the strings counts
       name = OpenSSL::X509::Name.new
+      name.add_entry("serialNumber", serial_number) unless serial_number.blank?
       name.add_entry("C", country) unless country.blank?
       name.add_entry("ST", state) unless state.blank?
       name.add_entry("L", locality) unless locality.blank?

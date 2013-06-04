@@ -12,6 +12,8 @@ describe CertificateAuthority::DistinguishedName do
     @distinguished_name.respond_to?(:o).should be_true
     @distinguished_name.respond_to?(:ou).should be_true
     @distinguished_name.respond_to?(:c).should be_true
+    @distinguished_name.respond_to?(:emailAddress).should be_true
+    @distinguished_name.respond_to?(:serialNumber).should be_true
   end
 
   it "should provide human-readable equivalents to the distinguished name common attributes" do
@@ -21,6 +23,8 @@ describe CertificateAuthority::DistinguishedName do
     @distinguished_name.respond_to?(:organization).should be_true
     @distinguished_name.respond_to?(:organizational_unit).should be_true
     @distinguished_name.respond_to?(:country).should be_true
+    @distinguished_name.respond_to?(:email_address).should be_true
+    @distinguished_name.respond_to?(:serial_number).should be_true
   end
 
   it "should require a common name" do

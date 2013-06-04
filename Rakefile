@@ -20,7 +20,7 @@ require 'jeweler'
 Jeweler::Tasks.new do |gem|
   # gem is a Gem::Specification... see http://docs.rubygems.org/read/chapter/20 for more options
   gem.name = "certificate_authority"
-  gem.homepage = "http://github.com/cchandler/certificate_authority"
+  gem.homepage = "https://github.com/cchandler/certificate_authority"
   gem.license = "MIT"
   gem.summary = 'Ruby gem for managing the core functions outlined in RFC-3280 for PKI'
   # gem.description = ''

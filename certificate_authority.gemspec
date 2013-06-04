@@ -61,7 +61,7 @@ Gem::Specification.new do |s|
     "spec/units/units_helper.rb",
     "spec/units/working_with_openssl_spec.rb"
   ]
-  s.homepage = "http://github.com/cchandler/certificate_authority"
+  s.homepage = "https://github.com/cchandler/certificate_authority"
   s.licenses = ["MIT"]
   s.require_paths = ["lib"]
   s.rubygems_version = "1.8.15"
@@ -72,15 +72,18 @@ Gem::Specification.new do |s|
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
       s.add_runtime_dependency(%q<activemodel>, [">= 3.0.6"])
+      s.add_runtime_dependency(%q<activesupport>, [">= 3.0.6"])
       s.add_development_dependency(%q<rspec>, [">= 0"])
       s.add_development_dependency(%q<jeweler>, [">= 1.5.2"])
     else
       s.add_dependency(%q<activemodel>, [">= 3.0.6"])
+      s.add_dependency(%q<activesupport>, [">= 3.0.6"])
       s.add_dependency(%q<rspec>, [">= 0"])
       s.add_dependency(%q<jeweler>, [">= 1.5.2"])
     end
   else
     s.add_dependency(%q<activemodel>, [">= 3.0.6"])
+    s.add_dependency(%q<activesupport>, [">= 3.0.6"])
     s.add_dependency(%q<rspec>, [">= 0"])
     s.add_dependency(%q<jeweler>, [">= 1.5.2"])
   end

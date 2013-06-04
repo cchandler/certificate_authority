@@ -27,6 +27,13 @@ describe CertificateAuthority::Extensions do
       basic_constraints.path_len = 2
       basic_constraints.to_s.should == "CA:true,pathlen:2"
     end
+
+    it "should parse values from a proper OpenSSL extension string" do
+      basic_constraints = CertificateAuthority::Extensions::BasicConstraints.parse("CA:true,pathlen:2", true)
+      basic_constraints.critical.should be_true
+      basic_constraints.ca.should be_true
+      basic_constraints.path_len.should == 2
+    end
   end
 
   describe CertificateAuthority::Extensions::SubjectAlternativeName do
@@ -49,6 +56,13 @@ describe CertificateAuthority::Extensions do
       subjectAltName.to_s.should == "URI:http://localhost.altname.example.com,URI:http://other.example.com"
     end
 
+    it "should parse URIs from a proper OpenSSL extension string" do
+      subjectAltName = CertificateAuthority::Extensions::SubjectAlternativeName.parse("URI:http://localhost.altname.example.com", false)
+      subjectAltName.uris.should == ["http://localhost.altname.example.com"]
+
+      subjectAltName = CertificateAuthority::Extensions::SubjectAlternativeName.parse("URI:http://localhost.altname.example.com,URI:http://other.example.com", false)
+      subjectAltName.uris.should == ["http://localhost.altname.example.com", "http://other.example.com"]
+    end
 
     it "should respond to :dns_names" do
       subjectAltName = CertificateAuthority::Extensions::SubjectAlternativeName.new
@@ -67,6 +81,14 @@ describe CertificateAuthority::Extensions do
 
       subjectAltName.dns_names = ["localhost.altname.example.com", "other.example.com"]
       subjectAltName.to_s.should == "DNS:localhost.altname.example.com,DNS:other.example.com"
+    end
+
+    it "should parse DNS names from a proper OpenSSL extension string" do
+      subjectAltName = CertificateAuthority::Extensions::SubjectAlternativeName.parse("DNS:localhost.altname.example.com", false)
+      subjectAltName.dns_names.should == ["localhost.altname.example.com"]
+
+      subjectAltName = CertificateAuthority::Extensions::SubjectAlternativeName.parse("DNS:localhost.altname.example.com,DNS:other.example.com", false)
+      subjectAltName.dns_names.should == ["localhost.altname.example.com", "other.example.com"]
     end
 
     it "should respond to :ips" do
@@ -88,6 +110,14 @@ describe CertificateAuthority::Extensions do
       subjectAltName.to_s.should == "IP:1.2.3.4,IP:5.6.7.8"
     end
 
+    it "should parse IPs from a proper OpenSSL extension string" do
+      subjectAltName = CertificateAuthority::Extensions::SubjectAlternativeName.parse("IP:1.2.3.4", false)
+      subjectAltName.ips.should == ["1.2.3.4"]
+
+      subjectAltName = CertificateAuthority::Extensions::SubjectAlternativeName.parse("IP:1.2.3.4,IP:5.6.7.8", false)
+      subjectAltName.ips.should == ["1.2.3.4", "5.6.7.8"]
+    end
+
     it "should generate a proper OpenSSL extension string for URIs IPs and DNS names together" do
       subjectAltName = CertificateAuthority::Extensions::SubjectAlternativeName.new
       subjectAltName.ips = ["1.2.3.4"]
@@ -107,9 +137,27 @@ describe CertificateAuthority::Extensions do
 
       subjectAltName.uris = ["http://localhost.altname.example.com", "http://other.altname.example.com"]
       subjectAltName.to_s.should == "URI:http://localhost.altname.example.com,URI:http://other.altname.example.com,DNS:localhost.altname.example.com,DNS:other.example.com,IP:1.2.3.4,IP:5.6.7.8"
-
     end
 
+    it "should parse URIs IPs and DNS names together from a proper OpenSSL extension string" do
+      subjectAltName = CertificateAuthority::Extensions::SubjectAlternativeName.parse("IP:1.2.3.4", false)
+      subjectAltName.ips.should == ["1.2.3.4"]
+
+      subjectAltName = CertificateAuthority::Extensions::SubjectAlternativeName.parse("DNS:localhost.altname.example.com,IP:1.2.3.4", false)
+      subjectAltName.dns_names.should == ["localhost.altname.example.com"]
+
+      subjectAltName = CertificateAuthority::Extensions::SubjectAlternativeName.parse("DNS:localhost.altname.example.com,DNS:other.example.com,IP:1.2.3.4", false)
+      subjectAltName.dns_names.should == ["localhost.altname.example.com", "other.example.com"]
+
+      subjectAltName = CertificateAuthority::Extensions::SubjectAlternativeName.parse("DNS:localhost.altname.example.com,DNS:other.example.com,IP:1.2.3.4,IP:5.6.7.8", false)
+      subjectAltName.ips.should == ["1.2.3.4", "5.6.7.8"]
+
+      subjectAltName = CertificateAuthority::Extensions::SubjectAlternativeName.parse("URI:http://localhost.altname.example.com,DNS:localhost.altname.example.com,DNS:other.example.com,IP:1.2.3.4,IP:5.6.7.8", false)
+      subjectAltName.uris.should == ["http://localhost.altname.example.com"]
+
+      subjectAltName = CertificateAuthority::Extensions::SubjectAlternativeName.parse("URI:http://localhost.altname.example.com,URI:http://other.altname.example.com,DNS:localhost.altname.example.com,DNS:other.example.com,IP:1.2.3.4,IP:5.6.7.8", false)
+      subjectAltName.uris.should == ["http://localhost.altname.example.com", "http://other.altname.example.com"]
+    end
 
   end
 end

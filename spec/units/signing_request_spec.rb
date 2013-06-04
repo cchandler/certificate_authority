@@ -63,24 +63,20 @@ EOF
       cert.should be_a(CertificateAuthority::Certificate)
     end
 
-    it "should not have a serial number set yet" do
-      @cert.serial_number.number.should be_nil
-    end
-
     it "should be signable w/ a serial number" do
-        root = CertificateAuthority::Certificate.new
-        root.signing_entity = true
-        root.subject.common_name = "chrischandler.name root"
-        root.key_material.generate_key(1024)
-        root.serial_number.number = 2
-        root.sign!
-        @cert.serial_number.number = 5
-        @cert.parent = root
-        result_cert = @cert.sign!
-        result_cert.should be_a(OpenSSL::X509::Certificate)
-        ## Verify the subjects and public key match
-        @csr.distinguished_name.to_x509_name.should == result_cert.subject
-        @csr.key_material.public_key.to_pem.should == result_cert.public_key.to_pem
+      root = CertificateAuthority::Certificate.new
+      root.signing_entity = true
+      root.subject.common_name = "chrischandler.name root"
+      root.key_material.generate_key(1024)
+      root.serial_number.number = 2
+      root.sign!
+      @cert.serial_number.number = 5
+      @cert.parent = root
+      result_cert = @cert.sign!
+      result_cert.should be_a(OpenSSL::X509::Certificate)
+      ## Verify the subjects and public key match
+      @csr.distinguished_name.to_x509_name.should == result_cert.subject
+      @csr.key_material.public_key.to_pem.should == result_cert.public_key.to_pem
     end
   end
 

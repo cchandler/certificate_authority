@@ -1,3 +1,5 @@
+require 'active_support/all'
+
 module CertificateAuthority
   class Certificate
     include ActiveModel::Validations
@@ -32,8 +34,8 @@ module CertificateAuthority
       self.distinguished_name = DistinguishedName.new
       self.serial_number = SerialNumber.new
       self.key_material = MemoryKeyMaterial.new
-      self.not_before = Time.now
-      self.not_after = Time.now + 60 * 60 * 24 * 365 #One year
+      self.not_before = Time.now.change(:min => 0).utc
+      self.not_after = Time.now.change(:min => 0).utc + 1.year
       self.parent = self
       self.extensions = load_extensions()
 
@@ -46,7 +48,7 @@ module CertificateAuthority
       merge_profile_with_extensions(signing_profile)
 
       openssl_cert = OpenSSL::X509::Certificate.new
-      openssl_cert.version    = 2
+      openssl_cert.version = 2
       openssl_cert.not_before = self.not_before
       openssl_cert.not_after = self.not_after
       openssl_cert.public_key = self.key_material.public_key
@@ -85,7 +87,7 @@ module CertificateAuthority
       self.extensions.keys.sort{|a,b| b<=>a}.each do |k|
         e = extensions[k]
         next if e.to_s.nil? or e.to_s == "" ## If the extension returns an empty string we won't include it
-        ext = factory.create_ext(e.openssl_identifier, e.to_s)
+        ext = factory.create_ext(e.openssl_identifier, e.to_s, e.critical)
         openssl_cert.add_extension(ext)
       end
 
@@ -114,6 +116,34 @@ module CertificateAuthority
     def to_pem
       raise "Certificate has no signed body" if self.openssl_body.nil?
       self.openssl_body.to_pem
+    end
+
+    def to_csr
+      csr = SigningRequest.new
+      csr.distinguished_name = self.distinguished_name
+      csr.key_material = self.key_material
+      factory = OpenSSL::X509::ExtensionFactory.new
+      exts = []
+      self.extensions.keys.each do |k|
+        ## Don't copy over key identifiers for CSRs
+        next if k == "subjectKeyIdentifier" || k == "authorityKeyIdentifier"
+        e = extensions[k]
+        ## If the extension returns an empty string we won't include it
+        next if e.to_s.nil? or e.to_s == ""
+        exts << factory.create_ext(e.openssl_identifier, e.to_s, e.critical)
+      end
+      attrval = OpenSSL::ASN1::Set([OpenSSL::ASN1::Sequence(exts)])
+      attrs = [
+        OpenSSL::X509::Attribute.new("extReq", attrval),
+        OpenSSL::X509::Attribute.new("msExtReq", attrval)
+      ]
+      csr.attributes = attrs
+      csr
+    end
+
+    def self.from_x509_cert(raw_cert)
+      openssl_cert = OpenSSL::X509::Certificate.new(raw_cert)
+      Certificate.from_openssl(openssl_cert)
     end
 
     def is_root_entity?
@@ -145,28 +175,10 @@ module CertificateAuthority
     def load_extensions
       extension_hash = {}
 
-      temp_extensions = []
-      basic_constraints = CertificateAuthority::Extensions::BasicConstraints.new
-      temp_extensions << basic_constraints
-      crl_distribution_points = CertificateAuthority::Extensions::CrlDistributionPoints.new
-      temp_extensions << crl_distribution_points
-      subject_key_identifier = CertificateAuthority::Extensions::SubjectKeyIdentifier.new
-      temp_extensions << subject_key_identifier
-      authority_key_identifier = CertificateAuthority::Extensions::AuthorityKeyIdentifier.new
-      temp_extensions << authority_key_identifier
-      authority_info_access = CertificateAuthority::Extensions::AuthorityInfoAccess.new
-      temp_extensions << authority_info_access
-      key_usage = CertificateAuthority::Extensions::KeyUsage.new
-      temp_extensions << key_usage
-      extended_key_usage = CertificateAuthority::Extensions::ExtendedKeyUsage.new
-      temp_extensions << extended_key_usage
-      subject_alternative_name = CertificateAuthority::Extensions::SubjectAlternativeName.new
-      temp_extensions << subject_alternative_name
-      certificate_policies = CertificateAuthority::Extensions::CertificatePolicies.new
-      temp_extensions << certificate_policies
-
-      temp_extensions.each do |extension|
-        extension_hash[extension.openssl_identifier] = extension
+      ObjectSpace.each_object(Module) do |m|
+        next if m == CertificateAuthority::Extensions::ExtensionAPI
+        next unless m.ancestors.include?(CertificateAuthority::Extensions::ExtensionAPI)
+        extension_hash[m::OPENSSL_IDENTIFIER] = m.new
       end
 
       extension_hash
@@ -192,7 +204,12 @@ module CertificateAuthority
       certificate.serial_number.number = openssl_cert.serial.to_i
       certificate.not_before = openssl_cert.not_before
       certificate.not_after = openssl_cert.not_after
-      # TODO extensions
+      ObjectSpace.each_object(Module) do |m|
+        next if m == CertificateAuthority::Extensions::ExtensionAPI
+        next unless m.ancestors.include?(CertificateAuthority::Extensions::ExtensionAPI)
+        o,v,c = (openssl_cert.extensions.detect { |e| e.to_a.first == m::OPENSSL_IDENTIFIER } || []).to_a
+        certificate.extensions[m::OPENSSL_IDENTIFIER] = m.parse(v, c) if v
+      end
       certificate
     end
 
