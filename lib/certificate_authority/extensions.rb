@@ -5,6 +5,10 @@ module CertificateAuthority
         raise "Implementation required"
       end
 
+      def self.parse(value, critical)
+        raise "Implementation required"
+      end
+
       def config_extensions
         {}
       end
@@ -20,14 +24,24 @@ module CertificateAuthority
     # Reference: Section 4.2.1.10 of RFC3280
     # http://tools.ietf.org/html/rfc3280#section-4.2.1.10
     class BasicConstraints
+      OPENSSL_IDENTIFIER = "basicConstraints"
+
       include ExtensionAPI
       include ActiveModel::Validations
+
+      attr_accessor :critical
       attr_accessor :ca
       attr_accessor :path_len
+      validates :critical, :inclusion => [true,false]
       validates :ca, :inclusion => [true,false]
 
       def initialize
+        self.critical = false
         self.ca = false
+      end
+
+      def openssl_identifier
+        OPENSSL_IDENTIFIER
       end
 
       def is_ca?
@@ -39,15 +53,23 @@ module CertificateAuthority
         @path_len = value
       end
 
-      def openssl_identifier
-        "basicConstraints"
+      def to_s
+        res = []
+        res << "CA:#{self.ca}"
+        res << "pathlen:#{self.path_len}" unless self.path_len.nil?
+        res.join(',')
       end
 
-      def to_s
-        result = ""
-        result += "CA:#{self.ca}"
-        result += ",pathlen:#{self.path_len}" unless self.path_len.nil?
-        result
+      def self.parse(value, critical)
+        obj = self.new
+        return obj if value.nil?
+        obj.critical = critical
+        value.split(/,\s*/).each do |v|
+          c = v.split(':', 2)
+          obj.ca = !!c.last if c.first == "CA"
+          obj.path_len = c.last.to_i if c.first == "pathlen"
+        end
+        obj
       end
     end
 
@@ -56,16 +78,20 @@ module CertificateAuthority
     # Reference: Section 4.2.1.14 of RFC3280
     # http://tools.ietf.org/html/rfc3280#section-4.2.1.14
     class CrlDistributionPoints
+      OPENSSL_IDENTIFIER = "crlDistributionPoints"
+
       include ExtensionAPI
 
+      attr_accessor :critical
       attr_accessor :uri
 
       def initialize
+        self.critical = false
         # self.uri = "http://moo.crlendPoint.example.com/something.crl"
       end
 
       def openssl_identifier
-        "crlDistributionPoints"
+        OPENSSL_IDENTIFIER
       end
 
       ## NB: At this time it seems OpenSSL's extension handlers don't support
@@ -79,8 +105,20 @@ module CertificateAuthority
       end
 
       def to_s
-        return "" if self.uri.nil?
-        "URI:#{self.uri}"
+        res = []
+        res << "URI:#{self.uri}" unless self.uri.nil?
+        res.join(',')
+      end
+
+      def self.parse(value, critical)
+        obj = self.new
+        return obj if value.nil?
+        obj.critical = critical
+        value.split(/,\s*/).each do |v|
+          c = v.split(':', 2)
+          obj.uri = c.last if c.first == "URI"
+        end
+        obj
       end
     end
 
@@ -89,28 +127,69 @@ module CertificateAuthority
     # Reference: Section 4.2.1.2 of RFC3280
     # http://tools.ietf.org/html/rfc3280#section-4.2.1.2
     class SubjectKeyIdentifier
+      OPENSSL_IDENTIFIER = "subjectKeyIdentifier"
+
       include ExtensionAPI
+
+      attr_accessor :critical
+      attr_accessor :identifier
+
+      def initialize
+        self.critical = false
+        self.identifier = "hash"
+      end
+
       def openssl_identifier
-        "subjectKeyIdentifier"
+        OPENSSL_IDENTIFIER
       end
 
       def to_s
-        "hash"
+        res = []
+        res << self.identifier
+        res.join(',')
+      end
+
+      def self.parse(value, critical)
+        obj = self.new
+        return obj if value.nil?
+        obj.critical = critical
+        obj.identifier = value
+        obj
       end
     end
 
-    # Used to identify the keypair used to sign CRLs.
-    # Reference: Section 5.2.1 of RFC3280
-    # http://tools.ietf.org/html/rfc3280#section-5.2.1
+    # Identifies the public key associated with a given private key.
+    # Reference: Section 4.2.1.1 of RFC3280
+    # http://tools.ietf.org/html/rfc3280#section-4.2.1.1
     class AuthorityKeyIdentifier
+      OPENSSL_IDENTIFIER = "authorityKeyIdentifier"
+
       include ExtensionAPI
 
+      attr_accessor :critical
+      attr_accessor :identifier
+
+      def initialize
+        self.critical = false
+        self.identifier = ["keyid", "issuer"]
+      end
+
       def openssl_identifier
-        "authorityKeyIdentifier"
+        OPENSSL_IDENTIFIER
       end
 
       def to_s
-        "keyid,issuer"
+        res = []
+        res += self.identifier
+        res.join(',')
+      end
+
+      def self.parse(value, critical)
+        obj = self.new
+        return obj if value.nil?
+        obj.critical = critical
+        obj.identifier = value.split(/,\s*/)
+        obj
       end
     end
 
@@ -120,21 +199,41 @@ module CertificateAuthority
     # Reference: Section 4.2.2.1 of RFC3280
     # http://tools.ietf.org/html/rfc3280#section-4.2.2.1
     class AuthorityInfoAccess
+      OPENSSL_IDENTIFIER = "authorityInfoAccess"
+
       include ExtensionAPI
 
+      attr_accessor :critical
       attr_accessor :ocsp
+      attr_accessor :ca_issuers
 
       def initialize
+        self.critical = false
         self.ocsp = []
+        self.ca_issuers = []
       end
 
       def openssl_identifier
-        "authorityInfoAccess"
+        OPENSSL_IDENTIFIER
       end
 
       def to_s
-        return "" if self.ocsp.empty?
-        "OCSP;URI:#{self.ocsp}"
+        res = []
+        res += self.ocsp.map {|o| "OCSP;URI:#{o}" }
+        res += self.ca_issuers.map {|c| "caIssuers;URI:#{c}" }
+        res.join(',')
+      end
+
+      def self.parse(value, critical)
+        obj = self.new
+        return obj if value.nil?
+        obj.critical = critical
+        value.split(/,\s*/).each do |v|
+          c = v.split(':', 2)
+          obj.ocsp << c.last if c.first == "OCSP;URI"
+          obj.ca_issuers << c.last if c.first == "caIssuers;URI"
+        end
+        obj
       end
     end
 
@@ -142,20 +241,34 @@ module CertificateAuthority
     # Reference: Section 4.2.1.3 of RFC3280
     # http://tools.ietf.org/html/rfc3280#section-4.2.1.3
     class KeyUsage
+      OPENSSL_IDENTIFIER = "keyUsage"
+
       include ExtensionAPI
 
+      attr_accessor :critical
       attr_accessor :usage
 
       def initialize
+        self.critical = false
         self.usage = ["digitalSignature", "nonRepudiation"]
       end
 
       def openssl_identifier
-        "keyUsage"
+        OPENSSL_IDENTIFIER
       end
 
       def to_s
-        "#{self.usage.join(',')}"
+        res = []
+        res += self.usage
+        res.join(',')
+      end
+
+      def self.parse(value, critical)
+        obj = self.new
+        return obj if value.nil?
+        obj.critical = critical
+        obj.usage = value.split(/,\s*/)
+        obj
       end
     end
 
@@ -164,20 +277,34 @@ module CertificateAuthority
     # Reference: Section 4.2.1.13 of RFC3280
     # http://tools.ietf.org/html/rfc3280#section-4.2.1.13
     class ExtendedKeyUsage
+      OPENSSL_IDENTIFIER = "extendedKeyUsage"
+
       include ExtensionAPI
 
+      attr_accessor :critical
       attr_accessor :usage
 
       def initialize
-        self.usage = ["serverAuth","clientAuth"]
+        self.critical = false
+        self.usage = ["serverAuth"]
       end
 
       def openssl_identifier
-        "extendedKeyUsage"
+        OPENSSL_IDENTIFIER
       end
 
       def to_s
-        "#{self.usage.join(',')}"
+        res = []
+        res += self.usage
+        res.join(',')
+      end
+
+      def self.parse(value, critical)
+        obj = self.new
+        return obj if value.nil?
+        obj.critical = critical
+        obj.usage = value.split(/,\s*/)
+        obj
       end
     end
 
@@ -185,14 +312,22 @@ module CertificateAuthority
     # Reference: Section 4.2.1.7 of RFC3280
     # http://tools.ietf.org/html/rfc3280#section-4.2.1.7
     class SubjectAlternativeName
+      OPENSSL_IDENTIFIER = "subjectAltName"
+
       include ExtensionAPI
 
+      attr_accessor :critical
       attr_accessor :uris, :dns_names, :ips
 
       def initialize
+        self.critical = false
         self.uris = []
         self.dns_names = []
         self.ips = []
+      end
+
+      def openssl_identifier
+        OPENSSL_IDENTIFIER
       end
 
       def uris=(value)
@@ -210,22 +345,34 @@ module CertificateAuthority
         @ips = value
       end
 
-      def openssl_identifier
-        "subjectAltName"
-      end
-
       def to_s
-        res =  self.uris.map {|u| "URI:#{u}" }
+        res = []
+        res += self.uris.map {|u| "URI:#{u}" }
         res += self.dns_names.map {|d| "DNS:#{d}" }
         res += self.ips.map {|i| "IP:#{i}" }
+        res.join(',')
+      end
 
-        return res.join(',')
+      def self.parse(value, critical)
+        obj = self.new
+        return obj if value.nil?
+        obj.critical = critical
+        value.split(/,\s*/).each do |v|
+          c = v.split(':', 2)
+          obj.uris << c.last if c.first == "URI"
+          obj.dns_names << c.last if c.first == "DNS"
+          obj.ips << c.last if c.first == "IP"
+        end
+        obj
       end
     end
 
     class CertificatePolicies
+      OPENSSL_IDENTIFIER = "certificatePolicies"
+
       include ExtensionAPI
 
+      attr_accessor :critical
       attr_accessor :policy_identifier
       attr_accessor :cps_uris
       ##User notice
@@ -234,12 +381,12 @@ module CertificateAuthority
       attr_accessor :notice_numbers
 
       def initialize
+        self.critical = false
         @contains_data = false
       end
 
-
       def openssl_identifier
-        "certificatePolicies"
+        OPENSSL_IDENTIFIER
       end
 
       def user_notice=(value={})
@@ -289,7 +436,93 @@ module CertificateAuthority
 
       def to_s
         return "" unless @contains_data
-        "ia5org,@custom_policies"
+        res = []
+        res << "ia5org"
+        res += @config_extensions["custom_policies"] unless @config_extensions.nil?
+        res.join(',')
+      end
+
+      def self.parse(value, critical)
+        obj = self.new
+        return obj if value.nil?
+        obj.critical = critical
+        value.split(/,\s*/).each do |v|
+          c = v.split(':', 2)
+          obj.policy_identifier = c.last if c.first == "policyIdentifier"
+          obj.cps_uris << c.last if c.first =~ %r{CPS.\d+}
+          # TODO: explicit_text, organization, notice_numbers
+        end
+        obj
+      end
+    end
+
+    # DEPRECATED
+    # Specifics the purposes for which a certificate can be used.
+    # The basicConstraints, keyUsage, and extendedKeyUsage extensions are now used instead.
+    # https://www.openssl.org/docs/apps/x509v3_config.html#Netscape_Certificate_Type
+    class NetscapeCertificateType
+      OPENSSL_IDENTIFIER = "nsCertType"
+
+      include ExtensionAPI
+
+      attr_accessor :critical
+      attr_accessor :flags
+
+      def initialize
+        self.critical = false
+        self.flags = []
+      end
+
+      def openssl_identifier
+        OPENSSL_IDENTIFIER
+      end
+
+      def to_s
+        res = []
+        res += self.flags
+        res.join(',')
+      end
+
+      def self.parse(value, critical)
+        obj = self.new
+        return obj if value.nil?
+        obj.critical = critical
+        obj.flags = value.split(/,\s*/)
+        obj
+      end
+    end
+
+    # DEPRECATED
+    # Contains a comment which will be displayed when the certificate is viewed in some browsers.
+    # https://www.openssl.org/docs/apps/x509v3_config.html#Netscape_String_extensions_
+    class NetscapeComment
+      OPENSSL_IDENTIFIER = "nsComment"
+
+      include ExtensionAPI
+
+      attr_accessor :critical
+      attr_accessor :comment
+
+      def initialize
+        self.critical = false
+      end
+
+      def openssl_identifier
+        OPENSSL_IDENTIFIER
+      end
+
+      def to_s
+        res = []
+        res << self.comment if self.comment
+        res.join(',')
+      end
+
+      def self.parse(value, critical)
+        obj = self.new
+        return obj if value.nil?
+        obj.critical = critical
+        obj.comment = value
+        obj
       end
     end
 

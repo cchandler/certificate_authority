@@ -250,7 +250,7 @@ describe CertificateAuthority::Certificate do
         cert.extensions.map(&:oid).include?("certificatePolicies").should be_true
       end
 
-      it "should contain a nested userNotice if specified" do
+      pending "should contain a nested userNotice if specified" do
         #pending
          @certificate.sign!({
            "extensions" => {
@@ -328,7 +328,7 @@ describe CertificateAuthority::Certificate do
           "crlDistributionPoints" => {"uri" => "http://notme.com/other.crl" },
           "subjectKeyIdentifier" => {},
           "authorityKeyIdentifier" => {},
-          "authorityInfoAccess" => {"ocsp" => ["http://youFillThisOut/ocsp/"] },
+          "authorityInfoAccess" => {"ocsp" => ["http://youFillThisOut/ocsp/"], "ca_issuers" => ["http://me.com/other.crt"] },
           "keyUsage" => {"usage" => ["digitalSignature","nonRepudiation"] },
           "extendedKeyUsage" => {"usage" => [ "serverAuth","clientAuth"]},
           "subjectAltName" => {"uris" => ["http://subdomains.youFillThisOut/"]},
@@ -422,13 +422,13 @@ CERT
   end
 
   it "should default to one year validity" do
-    @certificate.not_after.should < Time.now + 65 * 60 * 24 * 365 and
-    @certificate.not_after.should > Time.now + 55 * 60 * 24 * 365
+    @certificate.not_after.should < Time.now.change(:min => 0).utc + 1.year + 2.hour and
+    @certificate.not_after.should > Time.now.change(:min => 0).utc + 1.year - 2.hour
   end
 
   it "should be able to have a revoked at time" do
     @certificate.revoked?.should be_false
-    @certificate.revoked_at = Time.now
+    @certificate.revoked_at = Time.now.utc
     @certificate.revoked?.should be_true
   end
 
