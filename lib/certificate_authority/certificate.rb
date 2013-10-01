@@ -75,7 +75,6 @@ module CertificateAuthority
 
       require 'tempfile'
       t = Tempfile.new("bullshit_conf")
-      # t = File.new("/tmp/openssl.cnf")
       ## The config requires a file even though we won't use it
       openssl_config = OpenSSL::Config.new(t.path)
 
@@ -111,9 +110,10 @@ module CertificateAuthority
       else
         digest = OpenSSL::Digest::Digest.new(signing_profile["digest"])
       end
-      self.openssl_body = openssl_cert.sign(parent.key_material.private_key,digest)
-      t.close! if t.is_a?(Tempfile)# We can get rid of the ridiculous temp file
-      self.openssl_body
+
+      self.openssl_body = openssl_cert.sign(parent.key_material.private_key, digest)
+    ensure
+      t.close! if t # We can get rid of the ridiculous temp file
     end
 
     def is_signing_entity?
