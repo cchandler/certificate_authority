@@ -159,30 +159,23 @@ module CertificateAuthority
       end
     end
 
+    EXTENSIONS = [
+        CertificateAuthority::Extensions::BasicConstraints,
+        CertificateAuthority::Extensions::CrlDistributionPoints,
+        CertificateAuthority::Extensions::SubjectKeyIdentifier,
+        CertificateAuthority::Extensions::AuthorityKeyIdentifier,
+        CertificateAuthority::Extensions::AuthorityInfoAccess,
+        CertificateAuthority::Extensions::KeyUsage,
+        CertificateAuthority::Extensions::ExtendedKeyUsage,
+        CertificateAuthority::Extensions::SubjectAlternativeName,
+        CertificateAuthority::Extensions::CertificatePolicies
+    ]
+
     def load_extensions
       extension_hash = {}
 
-      temp_extensions = []
-      basic_constraints = CertificateAuthority::Extensions::BasicConstraints.new
-      temp_extensions << basic_constraints
-      crl_distribution_points = CertificateAuthority::Extensions::CrlDistributionPoints.new
-      temp_extensions << crl_distribution_points
-      subject_key_identifier = CertificateAuthority::Extensions::SubjectKeyIdentifier.new
-      temp_extensions << subject_key_identifier
-      authority_key_identifier = CertificateAuthority::Extensions::AuthorityKeyIdentifier.new
-      temp_extensions << authority_key_identifier
-      authority_info_access = CertificateAuthority::Extensions::AuthorityInfoAccess.new
-      temp_extensions << authority_info_access
-      key_usage = CertificateAuthority::Extensions::KeyUsage.new
-      temp_extensions << key_usage
-      extended_key_usage = CertificateAuthority::Extensions::ExtendedKeyUsage.new
-      temp_extensions << extended_key_usage
-      subject_alternative_name = CertificateAuthority::Extensions::SubjectAlternativeName.new
-      temp_extensions << subject_alternative_name
-      certificate_policies = CertificateAuthority::Extensions::CertificatePolicies.new
-      temp_extensions << certificate_policies
-
-      temp_extensions.each do |extension|
+      EXTENSIONS.each do |klass|
+        extension = klass.new
         extension_hash[extension.openssl_identifier] = extension
       end
 
