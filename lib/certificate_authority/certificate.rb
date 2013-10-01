@@ -41,6 +41,23 @@ module CertificateAuthority
 
     end
 
+    def self.from_openssl openssl_cert
+      unless openssl_cert.is_a? OpenSSL::X509::Certificate
+        raise "Can only construct from an OpenSSL::X509::Certificate"
+      end
+
+      certificate = Certificate.new
+      # Only subject, key_material, and body are used for signing
+      certificate.distinguished_name = DistinguishedName.from_openssl openssl_cert.subject
+      certificate.key_material.public_key = openssl_cert.public_key
+      certificate.openssl_body = openssl_cert
+      certificate.serial_number.number = openssl_cert.serial.to_i
+      certificate.not_before = openssl_cert.not_before
+      certificate.not_after = openssl_cert.not_after
+      # TODO extensions
+      certificate
+    end
+
     def sign!(signing_profile={})
       raise "Invalid certificate #{self.errors.full_messages}" unless valid?
       merge_profile_with_extensions(signing_profile)
@@ -177,23 +194,6 @@ module CertificateAuthority
         config[k] = hash[k]
       end
       config
-    end
-
-    def self.from_openssl openssl_cert
-      unless openssl_cert.is_a? OpenSSL::X509::Certificate
-        raise "Can only construct from an OpenSSL::X509::Certificate"
-      end
-
-      certificate = Certificate.new
-      # Only subject, key_material, and body are used for signing
-      certificate.distinguished_name = DistinguishedName.from_openssl openssl_cert.subject
-      certificate.key_material.public_key = openssl_cert.public_key
-      certificate.openssl_body = openssl_cert
-      certificate.serial_number.number = openssl_cert.serial.to_i
-      certificate.not_before = openssl_cert.not_before
-      certificate.not_after = openssl_cert.not_after
-      # TODO extensions
-      certificate
     end
 
   end
