@@ -440,7 +440,7 @@ module CertificateAuthority
         res += @uris.map {|u| "URI:#{u}" }
         res += @dns_names.map {|d| "DNS:#{d}" }
         res += @ips.map {|i| "IP:#{i}" }
-        res += @emails.map {|i| "EMAIL:#{i}" }
+        res += @emails.map {|i| "email:#{i}" }
         res.join(',')
       end
 

@@ -129,10 +129,10 @@ describe CertificateAuthority::Extensions do
 
       it "should generate a proper OpenSSL extension string for emails" do
         subject.emails = ["copy"]
-        subject.to_s.should == "EMAIL:copy"
+        subject.to_s.should == "email:copy"
 
         subject.emails = ["copy", "foo@bar.com"]
-        subject.to_s.should == "EMAIL:copy,EMAIL:foo@bar.com"
+        subject.to_s.should == "email:copy,email:foo@bar.com"
       end
     end
 
@@ -177,7 +177,7 @@ describe CertificateAuthority::Extensions do
       subjectAltName.uris.should == ["http://localhost.altname.example.com", "http://other.altname.example.com"]
 
       subjectAltName.emails= ["copy", "foo@bar.com"]
-      subjectAltName.to_s.should == "URI:http://localhost.altname.example.com,URI:http://other.altname.example.com,DNS:localhost.altname.example.com,DNS:other.example.com,IP:1.2.3.4,IP:5.6.7.8,EMAIL:copy,EMAIL:foo@bar.com"
+      subjectAltName.to_s.should == "URI:http://localhost.altname.example.com,URI:http://other.altname.example.com,DNS:localhost.altname.example.com,DNS:other.example.com,IP:1.2.3.4,IP:5.6.7.8,email:copy,email:foo@bar.com"
     end
   end
 end
