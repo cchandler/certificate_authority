@@ -1,5 +1,5 @@
 GEM
-  remote: http://rubygems.org/
+  remote: https://rubygems.org/
   specs:
     activemodel (3.2.8)
       activesupport (= 3.2.8)
@@ -36,4 +36,5 @@ PLATFORMS
 DEPENDENCIES
   activemodel (>= 3.0.6)
   jeweler (>= 1.5.2)
+  rake
   rspec

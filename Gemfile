@@ -1,8 +1,13 @@
-source 'http://rubygems.org'
+source 'https://rubygems.org'
 
 gem 'activemodel', ">= 3.0.6"
 
 group :development do
-	gem 'rspec'
+  gem 'rspec'
   gem "jeweler", ">= 1.5.2"
 end
+
+group :test do
+ gem 'rake'
+end
+
