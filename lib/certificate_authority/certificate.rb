@@ -43,6 +43,25 @@ module CertificateAuthority
 
     end
 
+=begin
+    def self.from_openssl openssl_cert
+      unless openssl_cert.is_a? OpenSSL::X509::Certificate
+        raise "Can only construct from an OpenSSL::X509::Certificate"
+      end
+
+      certificate = Certificate.new
+      # Only subject, key_material, and body are used for signing
+      certificate.distinguished_name = DistinguishedName.from_openssl openssl_cert.subject
+      certificate.key_material.public_key = openssl_cert.public_key
+      certificate.openssl_body = openssl_cert
+      certificate.serial_number.number = openssl_cert.serial.to_i
+      certificate.not_before = openssl_cert.not_before
+      certificate.not_after = openssl_cert.not_after
+      # TODO extensions
+      certificate
+    end
+=end
+
     def sign!(signing_profile={})
       raise "Invalid certificate #{self.errors.full_messages}" unless valid?
       merge_profile_with_extensions(signing_profile)
@@ -60,7 +79,6 @@ module CertificateAuthority
 
       require 'tempfile'
       t = Tempfile.new("bullshit_conf")
-      # t = File.new("/tmp/openssl.cnf")
       ## The config requires a file even though we won't use it
       openssl_config = OpenSSL::Config.new(t.path)
 
@@ -96,9 +114,10 @@ module CertificateAuthority
       else
         digest = OpenSSL::Digest::Digest.new(signing_profile["digest"])
       end
-      self.openssl_body = openssl_cert.sign(parent.key_material.private_key,digest)
-      t.close! if t.is_a?(Tempfile)# We can get rid of the ridiculous temp file
-      self.openssl_body
+
+      self.openssl_body = openssl_cert.sign(parent.key_material.private_key, digest)
+    ensure
+      t.close! if t # We can get rid of the ridiculous temp file
     end
 
     def is_signing_entity?
@@ -172,13 +191,31 @@ module CertificateAuthority
       end
     end
 
+    EXTENSIONS = [
+        CertificateAuthority::Extensions::BasicConstraints,
+        CertificateAuthority::Extensions::CrlDistributionPoints,
+        CertificateAuthority::Extensions::SubjectKeyIdentifier,
+        CertificateAuthority::Extensions::AuthorityKeyIdentifier,
+        CertificateAuthority::Extensions::AuthorityInfoAccess,
+        CertificateAuthority::Extensions::KeyUsage,
+        CertificateAuthority::Extensions::ExtendedKeyUsage,
+        CertificateAuthority::Extensions::SubjectAlternativeName,
+        CertificateAuthority::Extensions::CertificatePolicies
+    ]
+
     def load_extensions
       extension_hash = {}
 
-      ObjectSpace.each_object(Module) do |m|
-        next if m == CertificateAuthority::Extensions::ExtensionAPI
-        next unless m.ancestors.include?(CertificateAuthority::Extensions::ExtensionAPI)
-        extension_hash[m::OPENSSL_IDENTIFIER] = m.new
+#<<<<<<< HEAD
+#      ObjectSpace.each_object(Module) do |m|
+#        next if m == CertificateAuthority::Extensions::ExtensionAPI
+#        next unless m.ancestors.include?(CertificateAuthority::Extensions::ExtensionAPI)
+#        extension_hash[m::OPENSSL_IDENTIFIER] = m.new
+#=======
+      EXTENSIONS.each do |klass|
+        extension = klass.new
+        extension_hash[extension.openssl_identifier] = extension
+#>>>>>>> 937a6b76e39889df762894eba2f21741fe6f797b
       end
 
       extension_hash
@@ -191,6 +228,7 @@ module CertificateAuthority
       config
     end
 
+<<<<<<< HEAD
     def self.from_openssl openssl_cert
       unless openssl_cert.is_a? OpenSSL::X509::Certificate
         raise "Can only construct from an OpenSSL::X509::Certificate"
@@ -213,5 +251,7 @@ module CertificateAuthority
       certificate
     end
 
+=======
+>>>>>>> 937a6b76e39889df762894eba2f21741fe6f797b
   end
 end
