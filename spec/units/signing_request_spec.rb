@@ -124,14 +124,14 @@ EOF
     it "should generate a CSR" do
       expected =<<EOF
 -----BEGIN CERTIFICATE REQUEST-----
-MIIBUjCBvAIAMBQxEjAQBgNVBAMMCWxvY2FsaG9zdDCBnzANBgkqhkiG9w0BAQEF
+MIIBUDCBugIAMBQxEjAQBgNVBAMMCWxvY2FsaG9zdDCBnzANBgkqhkiG9w0BAQEF
 AAOBjQAwgYkCgYEAsYhlX0a3/dAh5r12vl2FhOJuy2dbJXOnMSGMiIGbkOU/AHql
 GpG8mGOMDFEdoGeKQz7P1hrPH1uuqtt6ph0q9W0Oh2i/M52w+1C/yIosolvCNdaK
 264YpiMdQOtOqovP9IEHPh/OdYM1LrHecYCj9l/qD8WMd1Rt3aZLC5zStSMCAwEA
-AaAAMA0GCSqGSIb3DQEBDQUAA4GBAICefvxP71/1uA5PG0tH2WbgDVF/pDPM+ff3
-zdRuK6rpkUfDdtR4AwyEqNYptnPF8s/VDGI35JYzaTZZm/KXovupPWPccKHI/wKG
-C4rJCPgEvyfe5Uce/sQHrnNbW4zJcPbw78lGrbop2k1tHbwY9QGha8Tj8ico7wu0
-vvJ0eOXh
+ATANBgkqhkiG9w0BAQ0FAAOBgQACWe6Eyl5XDKgvUS9PUBnATpag2joaRDgc1qxU
+FTkA7VX3GcnDFqnu1bj8kE7Ej7KBUybSJoSlfZrTxT1GsZ1tubzBeWsYdY1LctU2
+5a/fyqvMg/m2DQaMK5oupJNuAvihmVCM0I1qjmDregeAqz94iki8YgAbG6q/NnyT
+YK3KbQ==
 -----END CERTIFICATE REQUEST-----
 EOF
       @csr.to_pem.should == expected
@@ -140,6 +140,15 @@ EOF
     it "should generate a signed CSR" do
       @csr.digest = "SHA256"
       @csr.to_x509_csr.signature_algorithm.should == "sha256WithRSAEncryption"
+    end
+
+    it "should generate a CSR w/ a subjectAlternativeName extension" do
+      alt_names = ["abc.com","somethingelse.com"]
+      @csr.subject_alternative_names = alt_names
+
+      expected_subjectAlt = CertificateAuthority::Extensions::SubjectAlternativeName.new
+      expected_subjectAlt.dns_names =["abc.com", "somethingelse.com"]
+      @csr.to_cert.extensions["subjectAltName"] == expected_subjectAlt
     end
   end
 end

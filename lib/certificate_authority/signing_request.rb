@@ -7,6 +7,23 @@ module CertificateAuthority
     attr_accessor :digest
     attr_accessor :attributes
 
+    def initialize()
+      @attributes = []
+    end
+
+    # Fake attribute for convenience because adding
+    # alternative names on a CSR is remarkably non-trivial.
+    def subject_alternative_names=(alt_names)
+      raise "alt_names must be an Array" unless alt_names.is_a?(Array)
+
+      factory = OpenSSL::X509::ExtensionFactory.new
+      name_list = alt_names.map{|m| "DNS:#{m}"}.join(",")
+      ext = factory.create_ext("subjectAltName",name_list,false)
+      ext_set = OpenSSL::ASN1::Set([OpenSSL::ASN1::Sequence([ext])])
+      attr = OpenSSL::X509::Attribute.new("extReq", ext_set)
+      @attributes << attr
+    end
+
     def read_attributes_by_oid(*oids)
       attributes.detect { |a| oids.include?(a.oid) }
     end

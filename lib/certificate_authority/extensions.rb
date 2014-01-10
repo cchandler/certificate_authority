@@ -16,6 +16,10 @@ module CertificateAuthority
       def openssl_identifier
         raise "Implementation required"
       end
+
+      def ==(value)
+        raise "Implementation required"
+      end
     end
 
     # Specifies whether an X.509v3 certificate can act as a CA, signing other
@@ -36,8 +40,8 @@ module CertificateAuthority
       validates :ca, :inclusion => [true,false]
 
       def initialize
-        self.critical = false
-        self.ca = false
+        @critical = false
+        @ca = false
       end
 
       def openssl_identifier
@@ -45,7 +49,7 @@ module CertificateAuthority
       end
 
       def is_ca?
-        self.ca
+        @ca
       end
 
       def path_len=(value)
@@ -55,9 +59,13 @@ module CertificateAuthority
 
       def to_s
         res = []
-        res << "CA:#{self.ca}"
-        res << "pathlen:#{self.path_len}" unless self.path_len.nil?
+        res << "CA:#{@ca}"
+        res << "pathlen:#{@path_len}" unless @path_len.nil?
         res.join(',')
+      end
+
+      def ==(o)
+        o.class == self.class && o.state == state
       end
 
       def self.parse(value, critical)
@@ -66,10 +74,15 @@ module CertificateAuthority
         obj.critical = critical
         value.split(/,\s*/).each do |v|
           c = v.split(':', 2)
-          obj.ca = !!c.last if c.first == "CA"
+          obj.ca = (c.last.upcase == "TRUE") if c.first == "CA"
           obj.path_len = c.last.to_i if c.first == "pathlen"
         end
         obj
+      end
+
+      protected
+      def state
+        [@critical,@ca,@path_len]
       end
     end
 
@@ -83,11 +96,11 @@ module CertificateAuthority
       include ExtensionAPI
 
       attr_accessor :critical
-      attr_accessor :uri
+      attr_accessor :uris
 
       def initialize
-        self.critical = false
-        # self.uri = "http://moo.crlendPoint.example.com/something.crl"
+        @critical = false
+        @uris = []
       end
 
       def openssl_identifier
@@ -104,10 +117,23 @@ module CertificateAuthority
         }
       end
 
+      # This is for legacy support. Technically it can (and probably should)
+      # be an array. But if someone is calling the old accessor we shouldn't
+      # necessarily break it.
+      def uri=(value)
+        @uris << value
+      end
+
       def to_s
         res = []
-        res << "URI:#{self.uri}" unless self.uri.nil?
+        @uris.each do |uri|
+          res << "URI:#{uri}"
+        end
         res.join(',')
+      end
+
+      def ==(o)
+        o.class == self.class && o.state == state
       end
 
       def self.parse(value, critical)
@@ -116,9 +142,14 @@ module CertificateAuthority
         obj.critical = critical
         value.split(/,\s*/).each do |v|
           c = v.split(':', 2)
-          obj.uri = c.last if c.first == "URI"
+          obj.uris << c.last if c.first == "URI"
         end
         obj
+      end
+
+      protected
+      def state
+        [@critical,@uri]
       end
     end
 
@@ -135,8 +166,8 @@ module CertificateAuthority
       attr_accessor :identifier
 
       def initialize
-        self.critical = false
-        self.identifier = "hash"
+        @critical = false
+        @identifier = "hash"
       end
 
       def openssl_identifier
@@ -145,8 +176,12 @@ module CertificateAuthority
 
       def to_s
         res = []
-        res << self.identifier
+        res << @identifier
         res.join(',')
+      end
+
+      def ==(o)
+        o.class == self.class && o.state == state
       end
 
       def self.parse(value, critical)
@@ -155,6 +190,11 @@ module CertificateAuthority
         obj.critical = critical
         obj.identifier = value
         obj
+      end
+
+      protected
+      def state
+        [@critical,@identifier]
       end
     end
 
@@ -170,8 +210,8 @@ module CertificateAuthority
       attr_accessor :identifier
 
       def initialize
-        self.critical = false
-        self.identifier = ["keyid", "issuer"]
+        @critical = false
+        @identifier = ["keyid", "issuer"]
       end
 
       def openssl_identifier
@@ -180,16 +220,25 @@ module CertificateAuthority
 
       def to_s
         res = []
-        res += self.identifier
+        res += @identifier
         res.join(',')
+      end
+
+      def ==(o)
+        o.class == self.class && o.state == state
       end
 
       def self.parse(value, critical)
         obj = self.new
         return obj if value.nil?
         obj.critical = critical
-        obj.identifier = value.split(/,\s*/)
+        obj.identifier = value.split(/,\s*/).last.chomp
         obj
+      end
+
+      protected
+      def state
+        [@critical,@identifier]
       end
     end
 
@@ -208,9 +257,9 @@ module CertificateAuthority
       attr_accessor :ca_issuers
 
       def initialize
-        self.critical = false
-        self.ocsp = []
-        self.ca_issuers = []
+        @critical = false
+        @ocsp = []
+        @ca_issuers = []
       end
 
       def openssl_identifier
@@ -219,27 +268,44 @@ module CertificateAuthority
 
       def to_s
         res = []
-        res += self.ocsp.map {|o| "OCSP;URI:#{o}" }
-        res += self.ca_issuers.map {|c| "caIssuers;URI:#{c}" }
+        res += @ocsp.map {|o| "OCSP;URI:#{o}" }
+        res += @ca_issuers.map {|c| "caIssuers;URI:#{c}" }
         res.join(',')
+      end
+
+      def ==(o)
+        o.class == self.class && o.state == state
       end
 
       def self.parse(value, critical)
         obj = self.new
         return obj if value.nil?
         obj.critical = critical
-        value.split(/,\s*/).each do |v|
-          c = v.split(':', 2)
-          obj.ocsp << c.last if c.first == "OCSP;URI"
-          obj.ca_issuers << c.last if c.first == "caIssuers;URI"
+        value.split("\n").each do |v|
+          if v.starts_with?("OCSP")
+            obj.ocsp << v.split.last
+          end
+
+          if v.starts_with?("CA Issuers")
+            obj.ca_issuers << v.split.last
+          end
         end
         obj
+      end
+
+      protected
+      def state
+        [@critical,@ocsp,@ca_issuers]
       end
     end
 
     # Specifies the allowed usage purposes of the keypair specified in this certificate.
     # Reference: Section 4.2.1.3 of RFC3280
     # http://tools.ietf.org/html/rfc3280#section-4.2.1.3
+    #
+    # Note: OpenSSL when parsing an extension will return results in the form
+    # 'Digital Signature', but on signing you have to set it to 'digitalSignature'.
+    # So copying an extension from an imported cert isn't going to work yet.
     class KeyUsage
       OPENSSL_IDENTIFIER = "keyUsage"
 
@@ -249,8 +315,8 @@ module CertificateAuthority
       attr_accessor :usage
 
       def initialize
-        self.critical = false
-        self.usage = ["digitalSignature", "nonRepudiation"]
+        @critical = false
+        @usage = ["digitalSignature", "nonRepudiation"]
       end
 
       def openssl_identifier
@@ -259,8 +325,12 @@ module CertificateAuthority
 
       def to_s
         res = []
-        res += self.usage
+        res += @usage
         res.join(',')
+      end
+
+      def ==(o)
+        o.class == self.class && o.state == state
       end
 
       def self.parse(value, critical)
@@ -269,6 +339,11 @@ module CertificateAuthority
         obj.critical = critical
         obj.usage = value.split(/,\s*/)
         obj
+      end
+
+      protected
+      def state
+        [@critical,@usage]
       end
     end
 
@@ -285,8 +360,8 @@ module CertificateAuthority
       attr_accessor :usage
 
       def initialize
-        self.critical = false
-        self.usage = ["serverAuth"]
+        @critical = false
+        @usage = ["serverAuth"]
       end
 
       def openssl_identifier
@@ -295,8 +370,12 @@ module CertificateAuthority
 
       def to_s
         res = []
-        res += self.usage
+        res += @usage
         res.join(',')
+      end
+
+      def ==(o)
+        o.class == self.class && o.state == state
       end
 
       def self.parse(value, critical)
@@ -305,6 +384,11 @@ module CertificateAuthority
         obj.critical = critical
         obj.usage = value.split(/,\s*/)
         obj
+      end
+
+      protected
+      def state
+        [@critical,@usage]
       end
     end
 
@@ -320,11 +404,11 @@ module CertificateAuthority
       attr_accessor :uris, :dns_names, :ips, :emails
 
       def initialize
-        self.critical = false
-        self.uris = []
-        self.dns_names = []
-        self.ips = []
-        self.emails = []
+        @critical = false
+        @uris = []
+        @dns_names = []
+        @ips = []
+        @emails = []
       end
 
       def openssl_identifier
@@ -353,11 +437,15 @@ module CertificateAuthority
 
       def to_s
         res = []
-        res += self.uris.map {|u| "URI:#{u}" }
-        res += self.dns_names.map {|d| "DNS:#{d}" }
-        res += self.ips.map {|i| "IP:#{i}" }
-        res += self.emails.map {|i| "EMAIL:#{i}" }
+        res += @uris.map {|u| "URI:#{u}" }
+        res += @dns_names.map {|d| "DNS:#{d}" }
+        res += @ips.map {|i| "IP:#{i}" }
+        res += @emails.map {|i| "EMAIL:#{i}" }
         res.join(',')
+      end
+
+      def ==(o)
+        o.class == self.class && o.state == state
       end
 
       def self.parse(value, critical)
@@ -372,6 +460,11 @@ module CertificateAuthority
           obj.emails << c.last if c.first == "EMAIL"
         end
         obj
+      end
+
+      protected
+      def state
+        [@critical,@uris,@dns_names,@ips,@emails]
       end
     end
 

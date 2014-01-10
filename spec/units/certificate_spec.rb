@@ -216,7 +216,7 @@ describe CertificateAuthority::Certificate do
       end
 
       it "should have a crlDistributionPoint if specified" do
-        @certificate.sign!({"extensions" => {"crlDistributionPoints" => {"uri" => ["http://crlThingy.com"]}}})
+        @certificate.sign!({"extensions" => {"crlDistributionPoints" => {"uris" => ["http://crlThingy.com"]}}})
         cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
         cert.extensions.map(&:oid).include?("crlDistributionPoints").should be_true
       end
@@ -390,6 +390,51 @@ CERT
       @small_cert.should_not be_valid
       @small_cert.key_material.private_key = "data"
       @small_cert.should be_valid
+    end
+
+    it "should check to make sure that if a certificate had extensions they were imported" do
+      cert_path = File.join(File.dirname(__FILE__),"..","samples","certs","github.com.pem")
+      openssl_cert = OpenSSL::X509::Certificate.new(File.read(cert_path))
+      @cert_with_extensions = CertificateAuthority::Certificate.from_openssl(openssl_cert)
+
+      expected_basicConstraints = CertificateAuthority::Extensions::BasicConstraints.new
+      expected_basicConstraints.critical = true
+      expected_basicConstraints.ca = false
+      @cert_with_extensions.extensions["basicConstraints"].should == expected_basicConstraints
+
+      expected_crlDistributionPoints = CertificateAuthority::Extensions::CrlDistributionPoints.new
+      expected_crlDistributionPoints.uris = ["http://crl3.digicert.com/ev2009a.crl","http://crl4.digicert.com/ev2009a.crl"]
+      @cert_with_extensions.extensions["crlDistributionPoints"].should == expected_crlDistributionPoints
+
+      expected_subjectAlt = CertificateAuthority::Extensions::SubjectAlternativeName.new
+      expected_subjectAlt.dns_names =["github.com", "www.github.com"]
+      @cert_with_extensions.extensions["subjectAltName"].should == expected_subjectAlt
+
+      expected_subjectKeyIdentifier = CertificateAuthority::Extensions::SubjectKeyIdentifier.new
+      expected_subjectKeyIdentifier.identifier = "87:D1:8F:19:6E:E4:87:6F:53:8C:77:91:07:50:DF:A3:BF:55:47:20"
+      @cert_with_extensions.extensions["subjectKeyIdentifier"].should == expected_subjectKeyIdentifier
+
+      expected_authorityKeyIdentifier = CertificateAuthority::Extensions::AuthorityKeyIdentifier.new
+      expected_authorityKeyIdentifier.identifier = "keyid:4C:58:CB:25:F0:41:4F:52:F4:28:C8:81:43:9B:A6:A8:A0:E6:92:E5"
+      @cert_with_extensions.extensions["authorityKeyIdentifier"].should == expected_authorityKeyIdentifier
+
+      expected_authorityInfoAccess = CertificateAuthority::Extensions::AuthorityInfoAccess.new
+      expected_authorityInfoAccess.ocsp << "URI:http://ocsp.digicert.com"
+      expected_authorityInfoAccess.ca_issuers << "URI:http://www.digicert.com/CACerts/DigiCertHighAssuranceEVCA-1.crt"
+      @cert_with_extensions.extensions["authorityInfoAccess"].should == expected_authorityInfoAccess
+
+      expected_keyUsage = CertificateAuthority::Extensions::KeyUsage.new
+      expected_keyUsage.critical = true
+      # This one is goofy. Though you have to tell openssl 'digitalSignature'
+      # it will parse and return 'Digital Signature' even though those should
+      # be identical.
+      expected_keyUsage.usage = ["Digital Signature", "Key Encipherment"]
+      @cert_with_extensions.extensions["keyUsage"].should == expected_keyUsage
+
+      expected_extendedKeyUsage = CertificateAuthority::Extensions::ExtendedKeyUsage.new
+      # Same asymmetric specify vs parse as above
+      expected_extendedKeyUsage.usage = ["TLS Web Server Authentication", "TLS Web Client Authentication"]
+      @cert_with_extensions.extensions["extendedKeyUsage"].should == expected_extendedKeyUsage
     end
   end
 
