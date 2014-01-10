@@ -22,10 +22,8 @@ module CertificateAuthority
         set = OpenSSL::ASN1.decode(attribute.value)
         seq = set.value.first
         seq.value.collect { |asn1ext| OpenSSL::X509::Extension.new(asn1ext).to_a }.each do |o, v, c|
-          ObjectSpace.each_object(Module) do |m|
-            next if m == CertificateAuthority::Extensions::ExtensionAPI
-            next unless m.ancestors.include?(CertificateAuthority::Extensions::ExtensionAPI)
-            cert.extensions[m::OPENSSL_IDENTIFIER] = m.parse(v, c) if v && m::OPENSSL_IDENTIFIER == o
+         Certificate::EXTENSIONS.each do |klass|
+            cert.extensions[klass::OPENSSL_IDENTIFIER] = klass.parse(v, c) if v && klass::OPENSSL_IDENTIFIER == o
           end
         end
       end

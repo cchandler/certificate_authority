@@ -191,6 +191,8 @@ module CertificateAuthority
       end
     end
 
+    # Enumeration of the extensions. Not the worst option since
+    # the likelihood of these needing to be updated is low at best.
     EXTENSIONS = [
         CertificateAuthority::Extensions::BasicConstraints,
         CertificateAuthority::Extensions::CrlDistributionPoints,
@@ -206,16 +208,9 @@ module CertificateAuthority
     def load_extensions
       extension_hash = {}
 
-#<<<<<<< HEAD
-#      ObjectSpace.each_object(Module) do |m|
-#        next if m == CertificateAuthority::Extensions::ExtensionAPI
-#        next unless m.ancestors.include?(CertificateAuthority::Extensions::ExtensionAPI)
-#        extension_hash[m::OPENSSL_IDENTIFIER] = m.new
-#=======
       EXTENSIONS.each do |klass|
         extension = klass.new
         extension_hash[extension.openssl_identifier] = extension
-#>>>>>>> 937a6b76e39889df762894eba2f21741fe6f797b
       end
 
       extension_hash
@@ -228,7 +223,6 @@ module CertificateAuthority
       config
     end
 
-<<<<<<< HEAD
     def self.from_openssl openssl_cert
       unless openssl_cert.is_a? OpenSSL::X509::Certificate
         raise "Can only construct from an OpenSSL::X509::Certificate"
@@ -242,16 +236,13 @@ module CertificateAuthority
       certificate.serial_number.number = openssl_cert.serial.to_i
       certificate.not_before = openssl_cert.not_before
       certificate.not_after = openssl_cert.not_after
-      ObjectSpace.each_object(Module) do |m|
-        next if m == CertificateAuthority::Extensions::ExtensionAPI
-        next unless m.ancestors.include?(CertificateAuthority::Extensions::ExtensionAPI)
-        o,v,c = (openssl_cert.extensions.detect { |e| e.to_a.first == m::OPENSSL_IDENTIFIER } || []).to_a
-        certificate.extensions[m::OPENSSL_IDENTIFIER] = m.parse(v, c) if v
+      EXTENSIONS.each do |klass|
+        _,v,c = (openssl_cert.extensions.detect { |e| e.to_a.first == klass::OPENSSL_IDENTIFIER } || []).to_a
+        certificate.extensions[klass::OPENSSL_IDENTIFIER] = klass.parse(v, c) if v
       end
+
       certificate
     end
 
-=======
->>>>>>> 937a6b76e39889df762894eba2f21741fe6f797b
   end
 end
