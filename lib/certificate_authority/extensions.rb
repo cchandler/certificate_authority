@@ -317,13 +317,14 @@ module CertificateAuthority
       include ExtensionAPI
 
       attr_accessor :critical
-      attr_accessor :uris, :dns_names, :ips
+      attr_accessor :uris, :dns_names, :ips, :emails
 
       def initialize
         self.critical = false
         self.uris = []
         self.dns_names = []
         self.ips = []
+        self.emails = []
       end
 
       def openssl_identifier
@@ -345,11 +346,17 @@ module CertificateAuthority
         @ips = value
       end
 
+      def emails=(value)
+        raise "Emails must be an array" unless value.is_a?(Array)
+        @emails = value
+      end
+
       def to_s
         res = []
         res += self.uris.map {|u| "URI:#{u}" }
         res += self.dns_names.map {|d| "DNS:#{d}" }
         res += self.ips.map {|i| "IP:#{i}" }
+        res += self.emails.map {|i| "EMAIL:#{i}" }
         res.join(',')
       end
 
@@ -362,6 +369,7 @@ module CertificateAuthority
           obj.uris << c.last if c.first == "URI"
           obj.dns_names << c.last if c.first == "DNS"
           obj.ips << c.last if c.first == "IP"
+          obj.emails << c.last if c.first == "EMAIL"
         end
         obj
       end

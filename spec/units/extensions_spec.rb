@@ -118,6 +118,24 @@ describe CertificateAuthority::Extensions do
       subjectAltName.ips.should == ["1.2.3.4", "5.6.7.8"]
     end
 
+    describe 'emails' do
+      let(:subject) { CertificateAuthority::Extensions::SubjectAlternativeName.new }
+
+      it "should require 'emails' to be an Array" do
+        expect {
+          subject.emails = "not an array"
+        }.to raise_error "Emails must be an array"
+      end
+
+      it "should generate a proper OpenSSL extension string for emails" do
+        subject.emails = ["copy"]
+        subject.to_s.should == "EMAIL:copy"
+
+        subject.emails = ["copy", "foo@bar.com"]
+        subject.to_s.should == "EMAIL:copy,EMAIL:foo@bar.com"
+      end
+    end
+
     it "should generate a proper OpenSSL extension string for URIs IPs and DNS names together" do
       subjectAltName = CertificateAuthority::Extensions::SubjectAlternativeName.new
       subjectAltName.ips = ["1.2.3.4"]
@@ -157,7 +175,9 @@ describe CertificateAuthority::Extensions do
 
       subjectAltName = CertificateAuthority::Extensions::SubjectAlternativeName.parse("URI:http://localhost.altname.example.com,URI:http://other.altname.example.com,DNS:localhost.altname.example.com,DNS:other.example.com,IP:1.2.3.4,IP:5.6.7.8", false)
       subjectAltName.uris.should == ["http://localhost.altname.example.com", "http://other.altname.example.com"]
-    end
 
+      subjectAltName.emails= ["copy", "foo@bar.com"]
+      subjectAltName.to_s.should == "URI:http://localhost.altname.example.com,URI:http://other.altname.example.com,DNS:localhost.altname.example.com,DNS:other.example.com,IP:1.2.3.4,IP:5.6.7.8,EMAIL:copy,EMAIL:foo@bar.com"
+    end
   end
 end
