@@ -2,4 +2,5 @@ pkg
 development
 .bundle
 .rvmrc
+coverage
 doc
