@@ -2,6 +2,7 @@
 
 {<img src="https://travis-ci.org/cchandler/certificate_authority.png?branch=master" alt="Build Status" />}[https://travis-ci.org/cchandler/certificate_authority]
 {<img src="https://codeclimate.com/github/cchandler/certificate_authority.png" alt="Code Climate" />}[https://codeclimate.com/github/cchandler/certificate_authority]
+{<img src="https://coveralls.io/repos/cchandler/certificate_authority/badge.png?branch=master" alt="Code Coverage" />}[https://coveralls.io/r/cchandler/certificate_authority]
 
 This is meant to provide a (more) programmer-friendly implementation of all the basic functionality contained in RFC-3280 to implement your own certificate authority.
 
