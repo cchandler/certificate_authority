@@ -190,6 +190,16 @@ describe CertificateAuthority::Certificate do
         cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
         cert.extensions.map(&:oid).include?("subjectAltName").should be_false
       end
+
+      it 'should replace email:copy with email address' do
+        @certificate.subject.email_address = 'foo@bar.com'
+        @certificate.sign!(
+            { "extensions" => { "subjectAltName" => { 'emails' => %w[copy fubar@bar.com] } } }
+        )
+        cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
+        alt = cert.extensions.select { |e| e.oid == 'subjectAltName' }.first
+        alt.value.should == 'email:foo@bar.com, email:fubar@bar.com'
+      end
     end
 
     describe "AuthorityInfoAccess" do

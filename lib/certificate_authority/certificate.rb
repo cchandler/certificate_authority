@@ -183,6 +183,16 @@ module CertificateAuthority
         items = signing_config[k]
         items.keys.each do |profile_item_key|
           if extension.respond_to?("#{profile_item_key}=".to_sym)
+            if k == 'subjectAltName' && profile_item_key == 'emails'
+              items[profile_item_key].map do |email|
+                if email == 'email:copy'
+                  fail "no email address provided for subject: #{subject.to_x509_name}" unless subject.email_address
+                  "email:#{subject.email_address}"
+                else
+                  email
+                end
+              end
+            end
             extension.send("#{profile_item_key}=".to_sym, items[profile_item_key] )
           else
             p "Tried applying '#{profile_item_key}' to #{extension.class} but it doesn't respond!"
