@@ -2,6 +2,7 @@ require 'rubygems'
 require 'bundler'
 require 'rspec'
 require 'rspec/core/rake_task'
+require 'rubocop/rake_task'
 
 begin
   Bundler.setup(:default, :development)
@@ -50,3 +51,6 @@ end
 RSpec::Core::RakeTask.new(:doc) do |t|
   t.rspec_opts   = ['--format specdoc ']
 end
+
+Rubocop::RakeTask.new
+
