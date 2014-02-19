@@ -67,12 +67,24 @@ module CertificateAuthority
   class WrappedDistinguishedName < DistinguishedName
     attr_accessor :x509_name
 
+    # this should by a String class extension, but this should be decided later
+    # implementation taken from ActiveSupport::Inflector
+    def underscore_string(camel_cased_word)
+      word = camel_cased_word.to_s.dup
+      word.gsub!('::', '/')
+      word.gsub!(/([A-Z\d]+)([A-Z][a-z])/,'\1_\2')
+      word.gsub!(/([a-z\d])([A-Z])/,'\1_\2')
+      word.tr!("-", "_")
+      word.downcase!
+      word
+    end
+
     def initialize(x509_name)
       @x509_name = x509_name
 
       subject = @x509_name.to_a
       subject.each do |element|
-        field = element[0].downcase
+        field = underscore_string(element[0])
         value = element[1]
         #type = element[2] ## -not used
         method_sym = "#{field}=".to_sym

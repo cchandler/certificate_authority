@@ -12,6 +12,7 @@ describe CertificateAuthority::DistinguishedName do
     @distinguished_name.respond_to?(:o).should be_true
     @distinguished_name.respond_to?(:ou).should be_true
     @distinguished_name.respond_to?(:c).should be_true
+    @distinguished_name.respond_to?(:emailAddress).should be_true
   end
 
   it "should provide human-readable equivalents to the distinguished name common attributes" do
@@ -21,6 +22,7 @@ describe CertificateAuthority::DistinguishedName do
     @distinguished_name.respond_to?(:organization).should be_true
     @distinguished_name.respond_to?(:organizational_unit).should be_true
     @distinguished_name.respond_to?(:country).should be_true
+    @distinguished_name.respond_to?(:email_address).should be_true
   end
 
   it "should require a common name" do
@@ -37,7 +39,7 @@ describe CertificateAuthority::DistinguishedName do
 
   describe "from_openssl" do
     before do
-      subject = "/CN=justincummins.name/L=on my laptop/ST=relaxed/C=as/O=programmer/OU=using this code"
+      subject = "/CN=justincummins.name/L=on my laptop/ST=relaxed/C=as/O=programmer/OU=using this code/emailAddress=bob@example.de"
       @name = OpenSSL::X509::Name.parse subject
       @dn = CertificateAuthority::DistinguishedName.from_openssl @name
     end
@@ -46,7 +48,7 @@ describe CertificateAuthority::DistinguishedName do
       lambda { CertificateAuthority::DistinguishedName.from_openssl "Not a OpenSSL::X509::Name" }.should raise_error
     end
 
-    [:common_name, :locality, :state, :country, :organization, :organizational_unit].each do |field|
+    [:common_name, :locality, :state, :country, :organization, :organizational_unit, :email_address].each do |field|
       it "should set the #{field} attribute" do
         @dn.send(field).should_not be_nil
       end
