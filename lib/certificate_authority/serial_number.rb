@@ -1,3 +1,5 @@
+require 'securerandom'
+
 module CertificateAuthority
   class SerialNumber
     include ActiveModel::Validations

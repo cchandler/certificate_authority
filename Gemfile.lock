@@ -54,7 +54,6 @@ PLATFORMS
 
 DEPENDENCIES
   activemodel (>= 3.0.6)
-  activesupport (>= 3.0.6)
   coveralls
   jeweler (>= 1.5.2)
   rake
