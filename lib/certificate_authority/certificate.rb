@@ -1,5 +1,3 @@
-require 'active_support/all'
-
 module CertificateAuthority
   class Certificate
     include ActiveModel::Validations
@@ -34,8 +32,8 @@ module CertificateAuthority
       self.distinguished_name = DistinguishedName.new
       self.serial_number = SerialNumber.new
       self.key_material = MemoryKeyMaterial.new
-      self.not_before = Time.now.change(:min => 0).utc
-      self.not_after = Time.now.change(:min => 0).utc + 1.year
+      self.not_before = Time.now
+      self.not_after = Time.now + 60 * 60 * 24 * 365 # One year
       self.parent = self
       self.extensions = load_extensions()
 

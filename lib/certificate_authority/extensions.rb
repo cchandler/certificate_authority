@@ -282,11 +282,11 @@ module CertificateAuthority
         return obj if value.nil?
         obj.critical = critical
         value.split("\n").each do |v|
-          if v.starts_with?("OCSP")
+          if v =~ /^OCSP/
             obj.ocsp << v.split.last
           end
 
-          if v.starts_with?("CA Issuers")
+          if v =~ /^CA Issuers/
             obj.ca_issuers << v.split.last
           end
         end

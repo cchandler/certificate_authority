@@ -477,8 +477,8 @@ CERT
   end
 
   it "should default to one year validity" do
-    @certificate.not_after.should < Time.now.change(:min => 0).utc + 1.year + 2.hour and
-    @certificate.not_after.should > Time.now.change(:min => 0).utc + 1.year - 2.hour
+    @certificate.not_after.should < Time.now + 65 * 60 * 24 * 365 and
+    @certificate.not_after.should > Time.now + 55 * 60 * 24 * 365
   end
 
   it "should be able to have a revoked at time" do

@@ -72,18 +72,15 @@ Gem::Specification.new do |s|
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
       s.add_runtime_dependency(%q<activemodel>, [">= 3.0.6"])
-      s.add_runtime_dependency(%q<activesupport>, [">= 3.0.6"])
       s.add_development_dependency(%q<rspec>, [">= 0"])
       s.add_development_dependency(%q<jeweler>, [">= 1.5.2"])
     else
       s.add_dependency(%q<activemodel>, [">= 3.0.6"])
-      s.add_dependency(%q<activesupport>, [">= 3.0.6"])
       s.add_dependency(%q<rspec>, [">= 0"])
       s.add_dependency(%q<jeweler>, [">= 1.5.2"])
     end
   else
     s.add_dependency(%q<activemodel>, [">= 3.0.6"])
-    s.add_dependency(%q<activesupport>, [">= 3.0.6"])
     s.add_dependency(%q<rspec>, [">= 0"])
     s.add_dependency(%q<jeweler>, [">= 1.5.2"])
   end
