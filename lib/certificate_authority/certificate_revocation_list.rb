@@ -59,9 +59,9 @@ module CertificateAuthority
 
       signing_cert = OpenSSL::X509::Certificate.new(self.parent.to_pem)
       if signing_profile["digest"].nil?
-        digest = OpenSSL::Digest::Digest.new("SHA512")
+        digest = OpenSSL::Digest.new("SHA512")
       else
-        digest = OpenSSL::Digest::Digest.new(signing_profile["digest"])
+        digest = OpenSSL::Digest.new(signing_profile["digest"])
       end
       crl.issuer = signing_cert.subject
       self.crl_body = crl.sign(self.parent.key_material.private_key, digest)
