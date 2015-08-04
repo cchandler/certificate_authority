@@ -110,9 +110,9 @@ module CertificateAuthority
       end
 
       if signing_profile["digest"].nil?
-        digest = OpenSSL::Digest::Digest.new("SHA512")
+        digest = OpenSSL::Digest.new("SHA512")
       else
-        digest = OpenSSL::Digest::Digest.new(signing_profile["digest"])
+        digest = OpenSSL::Digest.new(signing_profile["digest"])
       end
 
       self.openssl_body = openssl_cert.sign(parent.key_material.private_key, digest)

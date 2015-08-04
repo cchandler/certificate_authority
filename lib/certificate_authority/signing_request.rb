@@ -62,7 +62,7 @@ module CertificateAuthority
       opensslcsr.subject = @distinguished_name.to_x509_name
       opensslcsr.public_key = @key_material.public_key
       opensslcsr.attributes = @attributes unless @attributes.nil?
-      opensslcsr.sign @key_material.private_key, OpenSSL::Digest::Digest.new(@digest || "SHA512")
+      opensslcsr.sign @key_material.private_key, OpenSSL::Digest.new(@digest || "SHA512")
       opensslcsr
     end
 
