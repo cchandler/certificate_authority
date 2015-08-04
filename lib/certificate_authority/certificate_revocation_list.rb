@@ -6,6 +6,7 @@ module CertificateAuthority
     attr_accessor :parent
     attr_accessor :crl_body
     attr_accessor :next_update
+    attr_accessor :last_update_skew_seconds
 
     validate do |crl|
       errors.add :next_update, "Next update must be a positive value" if crl.next_update < 0
@@ -15,6 +16,7 @@ module CertificateAuthority
     def initialize
       self.certificates = []
       self.next_update = 60 * 60 * 4 # 4 hour default
+      self.last_update_skew_seconds = 0
     end
 
     def <<(revocable)
@@ -54,7 +56,7 @@ module CertificateAuthority
       end
 
       crl.version = 1
-      crl.last_update = Time.now
+      crl.last_update = Time.now - self.last_update_skew_seconds
       crl.next_update = Time.now + self.next_update
 
       signing_cert = OpenSSL::X509::Certificate.new(self.parent.to_pem)
