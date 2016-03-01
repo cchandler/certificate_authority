@@ -32,26 +32,26 @@ describe CertificateAuthority::CertificateRevocationList do
 
   it "should complain if you add a certificate without a revocation time" do
     @certificate.revoked_at = nil
-    lambda{ @crl << @certificate}.should raise_error
+    expect{ @crl << @certificate}.to raise_error
   end
 
   it "should have a 'parent' that will be responsible for signing" do
     @crl.parent = @root_certificate
-    @crl.parent.should_not be_nil
+    expect(@crl.parent).not_to be_nil
   end
 
   it "should raise an error if you try and sign a CRL without attaching a parent" do
     @crl.parent = nil
-    lambda { @crl.sign! }.should raise_error
+    expect { @crl.sign! }.to raise_error
   end
 
   it "should be able to generate a proper CRL" do
     @crl << @certificate
-    lambda {@crl.to_pem}.should raise_error
+    expect {@crl.to_pem}.to raise_error
     @crl.parent = @root_certificate
     @crl.sign!
-    @crl.to_pem.should_not be_nil
-    OpenSSL::X509::CRL.new(@crl.to_pem).should_not be_nil
+    expect(@crl.to_pem).not_to be_nil
+    expect(OpenSSL::X509::CRL.new(@crl.to_pem)).not_to be_nil
   end
 
   it "should be able to mix Certificates and SerialNumbers for convenience" do
@@ -60,7 +60,7 @@ describe CertificateAuthority::CertificateRevocationList do
     @crl.parent = @root_certificate
     @crl.sign!
     openssl_csr = OpenSSL::X509::CRL.new(@crl.to_pem)
-    openssl_csr.revoked.size.should == 2
+    expect(openssl_csr.revoked.size).to eq(2)
   end
 
   it "should have the correct number of entities" do
@@ -68,8 +68,8 @@ describe CertificateAuthority::CertificateRevocationList do
     @crl.parent = @root_certificate
     @crl.sign!
     openssl_clr = OpenSSL::X509::CRL.new(@crl.to_pem)
-    openssl_clr.revoked.should be_a(Array)
-    openssl_clr.revoked.size.should == 1
+    expect(openssl_clr.revoked).to be_a(Array)
+    expect(openssl_clr.revoked.size).to eq(1)
   end
 
   it "should have the serial numbers of revoked entities" do
@@ -78,9 +78,9 @@ describe CertificateAuthority::CertificateRevocationList do
     @crl.parent = @root_certificate
     @crl.sign!
     openssl_clr = OpenSSL::X509::CRL.new(@crl.to_pem)
-    openssl_clr.revoked.should be_a(Array)
-    openssl_clr.revoked.first.serial.should == @certificate.serial_number.number
-    openssl_clr.revoked.last.serial.should == @serial_number.number
+    expect(openssl_clr.revoked).to be_a(Array)
+    expect(openssl_clr.revoked.first.serial).to eq(@certificate.serial_number.number)
+    expect(openssl_clr.revoked.last.serial).to eq(@serial_number.number)
   end
 
   it "should be valid according to OpenSSL and signer" do
@@ -89,7 +89,7 @@ describe CertificateAuthority::CertificateRevocationList do
     @crl.sign!
     openssl_clr = OpenSSL::X509::CRL.new(@crl.to_pem)
     openssl_root = OpenSSL::X509::Certificate.new(@root_certificate.to_pem)
-    openssl_clr.verify(openssl_root.public_key).should be_true
+    expect(openssl_clr.verify(openssl_root.public_key)).to be_truthy
   end
 
   describe "Digests" do
@@ -98,7 +98,7 @@ describe CertificateAuthority::CertificateRevocationList do
       @crl.parent = @root_certificate
       @crl.sign!
       openssl_clr = OpenSSL::X509::CRL.new(@crl.to_pem)
-      openssl_clr.signature_algorithm.should == "sha512WithRSAEncryption"
+      expect(openssl_clr.signature_algorithm).to eq("sha512WithRSAEncryption")
     end
 
     it "should support alternate digests supported by OpenSSL" do
@@ -106,20 +106,20 @@ describe CertificateAuthority::CertificateRevocationList do
       @crl.parent = @root_certificate
       @crl.sign!({"digest" => "SHA1"})
       openssl_clr = OpenSSL::X509::CRL.new(@crl.to_pem)
-      openssl_clr.signature_algorithm.should == "sha1WithRSAEncryption"
+      expect(openssl_clr.signature_algorithm).to eq("sha1WithRSAEncryption")
     end
   end
 
   describe "Next update" do
     it "should be able to set a 'next_update' value" do
       @crl.next_update = (60 * 60 * 10) # 10 Hours
-      @crl.next_update.should_not be_nil
+      expect(@crl.next_update).not_to be_nil
     end
 
     it "should throw an error if we try and sign up with a negative next_update" do
       @crl.sign!
       @crl.next_update = - (60 * 60 * 10)
-      lambda{@crl.sign!}.should raise_error
+      expect{@crl.sign!}.to raise_error
     end
   end
 end

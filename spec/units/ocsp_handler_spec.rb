@@ -26,11 +26,11 @@ describe CertificateAuthority::OCSPRequestReader do
   end
 
   it "should read in the DER encoded body" do
-    @ocsp_request_reader.should_not be_nil
+    expect(@ocsp_request_reader).not_to be_nil
   end
 
   it "should read out certificate serial numbers" do
-    @ocsp_request_reader.serial_numbers.should == [2]
+    expect(@ocsp_request_reader.serial_numbers).to eq([2])
   end
 end
 
@@ -64,13 +64,13 @@ describe CertificateAuthority::OCSPResponseBuilder do
   end
 
   it "should build from a OCSPRequestReader" do
-    @response_builder.should_not be_nil
-    @response_builder.should be_a(CertificateAuthority::OCSPResponseBuilder)
+    expect(@response_builder).not_to be_nil
+    expect(@response_builder).to be_a(CertificateAuthority::OCSPResponseBuilder)
   end
 
   it "should build a response" do
     response = @response_builder.build_response
-    response.should be_a(OpenSSL::OCSP::Response)
+    expect(response).to be_a(OpenSSL::OCSP::Response)
   end
 
   it "should verify against the root" do
@@ -78,7 +78,7 @@ describe CertificateAuthority::OCSPResponseBuilder do
     root_cert = OpenSSL::X509::Certificate.new(@root_certificate.to_pem)
     store = OpenSSL::X509::Store.new
     store.add_cert(root_cert)
-    response.basic.verify([root_cert],store).should be_true
+    expect(response.basic.verify([root_cert],store)).to be_truthy
   end
 
   it "should have a configurable nextUpdate" do
@@ -87,7 +87,7 @@ describe CertificateAuthority::OCSPResponseBuilder do
     response = @response_builder.build_response
     response.basic.status.each do |status|
       ## 3 seconds of wabble is OK
-      status[5].should be_within(3).of(status[4] + time)
+      expect(status[5]).to be_within(3).of(status[4] + time)
     end
   end
 
@@ -95,7 +95,7 @@ describe CertificateAuthority::OCSPResponseBuilder do
     it "should support an everything's OK default (though somewhat useless)" do
       response = @response_builder.build_response
       response.basic.status.each do |status|
-        status[1].should == OpenSSL::OCSP::V_CERTSTATUS_GOOD
+        expect(status[1]).to eq(OpenSSL::OCSP::V_CERTSTATUS_GOOD)
       end
     end
 
@@ -107,7 +107,7 @@ describe CertificateAuthority::OCSPResponseBuilder do
       response = @response_builder.build_response
 
       response.basic.status.each do |status|
-        status[1].should == OpenSSL::OCSP::V_CERTSTATUS_REVOKED
+        expect(status[1]).to eq(OpenSSL::OCSP::V_CERTSTATUS_REVOKED)
       end
     end
   end
@@ -144,18 +144,18 @@ describe CertificateAuthority::OCSPHandler do
 
   it "should be able to accept an OCSP Request" do
     @ocsp_handler.ocsp_request = @ocsp_request
-    @ocsp_handler.ocsp_request.should_not be_nil
+    expect(@ocsp_handler.ocsp_request).not_to be_nil
   end
 
   it "should raise an error if you try and extract certificates without a raw request" do
     @ocsp_handler.extract_certificate_serials
     @ocsp_handler.ocsp_request = nil
-    lambda {@ocsp_handler.extract_certificate_serials}.should raise_error
+    expect {@ocsp_handler.extract_certificate_serials}.to raise_error
   end
 
   it "should return a hash of extracted certificates from OCSP requests" do
     result = @ocsp_handler.extract_certificate_serials
-    result.size.should == 1
+    expect(result.size).to eq(1)
   end
 
   it "should be able to generate an OCSP response" do
@@ -167,28 +167,28 @@ describe CertificateAuthority::OCSPHandler do
 
   it "should require a 'parent' entity for signing" do
     @ocsp_handler.parent = @root_certificate
-    @ocsp_handler.parent.should_not be_nil
+    expect(@ocsp_handler.parent).not_to be_nil
   end
 
   it "should raise an error if you ask for the signed OCSP response without generating it" do
     @ocsp_handler.extract_certificate_serials
     @ocsp_handler << @certificate
     @ocsp_handler.parent = @root_certificate
-    lambda { @ocsp_handler.to_der }.should raise_error
+    expect { @ocsp_handler.to_der }.to raise_error
     @ocsp_handler.response
-    @ocsp_handler.to_der.should_not be_nil
+    expect(@ocsp_handler.to_der).not_to be_nil
   end
 
   it "should raise an error if you generate a response without adding all certificates in request" do
     @ocsp_handler.extract_certificate_serials
     @ocsp_handler.parent = @root_certificate
-    lambda { @ocsp_handler.response }.should raise_error
+    expect { @ocsp_handler.response }.to raise_error
   end
 
   it "should raise an error if you generate a response without adding a parent signing entity" do
     @ocsp_handler.extract_certificate_serials
     @ocsp_handler << @certificate
-    lambda { @ocsp_handler.response }.should raise_error
+    expect { @ocsp_handler.response }.to raise_error
   end
 
   describe "Response" do
@@ -202,18 +202,18 @@ describe CertificateAuthority::OCSPHandler do
     end
 
     it "should have a correct status/status string" do
-      @openssl_ocsp_response.status_string.should == "successful"
-      @openssl_ocsp_response.status.should == 0
+      expect(@openssl_ocsp_response.status_string).to eq("successful")
+      expect(@openssl_ocsp_response.status).to eq(0)
     end
 
     it "should have an embedded BasicResponse with certificate statuses" do
       # [#<OpenSSL::OCSP::CertificateId:0x000001020ecad8>, 0, 1, nil, 2011-04-15 23:29:47 UTC, 2011-04-15 23:30:17 UTC, []]
-      @openssl_ocsp_response.basic.status.first[1].should == 0 # Everything is OK
+      expect(@openssl_ocsp_response.basic.status.first[1]).to eq(0) # Everything is OK
     end
 
     it "should have a next_update time" do
-      @openssl_ocsp_response.basic.status.first[5].should_not be_nil
-      @openssl_ocsp_response.basic.status.first[5].class.should == Time
+      expect(@openssl_ocsp_response.basic.status.first[5]).not_to be_nil
+      expect(@openssl_ocsp_response.basic.status.first[5].class).to eq(Time)
     end
   end
 end

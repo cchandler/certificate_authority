@@ -7,12 +7,12 @@ describe CertificateAuthority::KeyMaterial do
     end
 
     it "#{key_material_class} should know if a key is in memory or hardware" do
-      @key_material.is_in_hardware?.should_not be_nil
-      @key_material.is_in_memory?.should_not be_nil
+      expect(@key_material.is_in_hardware?).not_to be_nil
+      expect(@key_material.is_in_memory?).not_to be_nil
     end
 
     it "should use memory by default" do
-      @key_material.is_in_memory?.should be_true
+      expect(@key_material.is_in_memory?).to be_truthy
     end
   end
 
@@ -68,30 +68,30 @@ EOF
 
     it "should include a means of reading an RSA keypair" do
       key = CertificateAuthority::KeyMaterial.from_x509_key_pair(@key_pair)
-      key.public_key.should_not be_nil
-      key.public_key.should be_a(OpenSSL::PKey::RSA)
-      key.private_key.should_not be_nil
-      key.private_key.should be_a(OpenSSL::PKey::RSA)
+      expect(key.public_key).not_to be_nil
+      expect(key.public_key).to be_a(OpenSSL::PKey::RSA)
+      expect(key.private_key).not_to be_nil
+      expect(key.private_key).to be_a(OpenSSL::PKey::RSA)
     end
 
     it "should include a means of reading encrypted RSA keypairs" do
       key = CertificateAuthority::KeyMaterial.from_x509_key_pair(@encrypted_key_pair,"meow")
-      key.public_key.should_not be_nil
-      key.public_key.should be_a(OpenSSL::PKey::RSA)
-      key.private_key.should_not be_nil
-      key.private_key.should be_a(OpenSSL::PKey::RSA)
+      expect(key.public_key).not_to be_nil
+      expect(key.public_key).to be_a(OpenSSL::PKey::RSA)
+      expect(key.private_key).not_to be_nil
+      expect(key.private_key).to be_a(OpenSSL::PKey::RSA)
     end
 
     it "should raise an exception if you read an encrypted keypair w/ bad password" do
-      lambda {
+      expect {
         key = CertificateAuthority::KeyMaterial.from_x509_key_pair(@encrypted_key_pair,"wrong")
-      }.should raise_error
+      }.to raise_error
     end
 
     it "should include a means of reading a public-only PEM formatted key" do
       key = CertificateAuthority::KeyMaterial.from_x509_public_key(@public_key)
-      key.public_key.should_not be_nil
-      key.public_key.should be_a(OpenSSL::PKey::RSA)
+      expect(key.public_key).not_to be_nil
+      expect(key.public_key).to be_a(OpenSSL::PKey::RSA)
     end
   end
 end
@@ -102,15 +102,15 @@ describe CertificateAuthority::MemoryKeyMaterial do
   end
 
   it "should be able to generate an RSA key" do
-    @key_material.generate_key(768).should_not be_nil
+    expect(@key_material.generate_key(768)).not_to be_nil
   end
 
   it "should generate a proper OpenSSL::PKey::RSA" do
-    @key_material.generate_key(768).class.should == OpenSSL::PKey::RSA
+    expect(@key_material.generate_key(768).class).to eq(OpenSSL::PKey::RSA)
   end
 
   it "should be able to specify the size of the modulus to generate" do
-    @key_material.generate_key(768).should_not be_nil
+    expect(@key_material.generate_key(768)).not_to be_nil
   end
 
   describe "with generated key" do
@@ -120,24 +120,24 @@ describe CertificateAuthority::MemoryKeyMaterial do
     end
 
     it "should be able to retrieve the private key" do
-      @key_material_in_memory.private_key.should_not be_nil
+      expect(@key_material_in_memory.private_key).not_to be_nil
     end
 
     it "should be able to retrieve the public key" do
-      @key_material_in_memory.public_key.should_not be_nil
+      expect(@key_material_in_memory.public_key).not_to be_nil
     end
   end
 
   it "should not validate without public and private keys" do
-    @key_material.valid?.should be_false
+    expect(@key_material.valid?).to be_falsey
     @key_material.generate_key(768)
-    @key_material.valid?.should be_true
+    expect(@key_material.valid?).to be_truthy
     pub = @key_material.public_key
     @key_material.public_key = nil
-    @key_material.valid?.should be_false
+    expect(@key_material.valid?).to be_falsey
     @key_material.public_key = pub
     @key_material.private_key = nil
-    @key_material.valid?.should be_false
+    expect(@key_material.valid?).to be_falsey
   end
 end
 
@@ -160,20 +160,20 @@ CSR
   end
 
   it "should generate from a CSR" do
-    @key_material.should_not be_nil
+    expect(@key_material).not_to be_nil
   end
 
   it "should be able to expose a public key" do
-    @key_material.public_key.should_not be_nil
+    expect(@key_material.public_key).not_to be_nil
   end
 
   it "should not have a private key" do
-    @key_material.private_key.should be_nil
+    expect(@key_material.private_key).to be_nil
   end
 
   it "should raise when signature does not verify" do
     invalid = @request
     invalid.public_key = OpenSSL::PKey::RSA.new 512
-    lambda { CertificateAuthority::SigningRequestKeyMaterial.new invalid }.should raise_error
+    expect { CertificateAuthority::SigningRequestKeyMaterial.new invalid }.to raise_error
   end
 end

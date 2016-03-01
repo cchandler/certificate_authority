@@ -25,8 +25,8 @@ EOF
 
   it "should generate from a PEM CSR" do
     csr = CertificateAuthority::SigningRequest.from_x509_csr(@pem_csr)
-    csr.should_not be_nil
-    csr.should be_a(CertificateAuthority::SigningRequest)
+    expect(csr).not_to be_nil
+    expect(csr).to be_a(CertificateAuthority::SigningRequest)
   end
 
   it "should generate a proper DN from the CSR" do
@@ -37,18 +37,18 @@ EOF
     expected_dn.common_name = "www.chrischandler.name"
     expected_dn.locality = "San Francisco"
     expected_dn.state = "California"
-    csr.distinguished_name.should == expected_dn
+    expect(csr.distinguished_name).to eq(expected_dn)
   end
 
   it "should expose the underlying OpenSSL CSR" do
     csr = CertificateAuthority::SigningRequest.from_x509_csr(@pem_csr)
-    csr.openssl_csr.should be_a(OpenSSL::X509::Request)
+    expect(csr.openssl_csr).to be_a(OpenSSL::X509::Request)
   end
 
   it "should expose the PEM encoded original CSR" do
     csr = CertificateAuthority::SigningRequest.from_x509_csr(@pem_csr)
-    csr.raw_body.should == @pem_csr
-    csr.raw_body.should be_a(String)
+    expect(csr.raw_body).to eq(@pem_csr)
+    expect(csr.raw_body).to be_a(String)
   end
 
   describe "transforming to a certificate" do
@@ -59,8 +59,8 @@ EOF
 
     it "should allow transformation to a certificate" do
       cert = @csr.to_cert
-      cert.should_not be_nil
-      cert.should be_a(CertificateAuthority::Certificate)
+      expect(cert).not_to be_nil
+      expect(cert).to be_a(CertificateAuthority::Certificate)
     end
 
     it "should be signable w/ a serial number" do
@@ -73,10 +73,10 @@ EOF
       @cert.serial_number.number = 5
       @cert.parent = root
       result_cert = @cert.sign!
-      result_cert.should be_a(OpenSSL::X509::Certificate)
+      expect(result_cert).to be_a(OpenSSL::X509::Certificate)
       ## Verify the subjects and public key match
-      @csr.distinguished_name.to_x509_name.should == result_cert.subject
-      @csr.key_material.public_key.to_pem.should == result_cert.public_key.to_pem
+      expect(@csr.distinguished_name.to_x509_name).to eq(result_cert.subject)
+      expect(@csr.key_material.public_key.to_pem).to eq(result_cert.public_key.to_pem)
     end
   end
 
@@ -89,7 +89,7 @@ EOF
 
     it "should process a netscape SPKAC" do
       @csr = CertificateAuthority::SigningRequest.from_netscape_spkac(@spkac)
-      @csr.should be_a(CertificateAuthority::SigningRequest)
+      expect(@csr).to be_a(CertificateAuthority::SigningRequest)
     end
   end
 
@@ -134,12 +134,12 @@ FTkA7VX3GcnDFqnu1bj8kE7Ej7KBUybSJoSlfZrTxT1GsZ1tubzBeWsYdY1LctU2
 YK3KbQ==
 -----END CERTIFICATE REQUEST-----
 EOF
-      @csr.to_pem.should == expected
+      expect(@csr.to_pem).to eq(expected)
     end
 
     it "should generate a signed CSR" do
       @csr.digest = "SHA256"
-      @csr.to_x509_csr.signature_algorithm.should == "sha256WithRSAEncryption"
+      expect(@csr.to_x509_csr.signature_algorithm).to eq("sha256WithRSAEncryption")
     end
 
     it "should generate a CSR w/ a subjectAlternativeName extension" do

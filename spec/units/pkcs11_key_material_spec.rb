@@ -11,31 +11,31 @@ describe CertificateAuthority::Pkcs11KeyMaterial, :pkcs11 => true do
   end
 
   it "should identify as being in hardware", :pkcs11 => true do
-    @key_material_in_hardware.is_in_hardware?.should be_true
+    expect(@key_material_in_hardware.is_in_hardware?).to be_truthy
   end
 
   it "should return a Pkey ref if the private key is requested", :pkcs11 => true do
-    @key_material_in_hardware.private_key.class.should == OpenSSL::PKey::RSA
+    expect(@key_material_in_hardware.private_key.class).to eq(OpenSSL::PKey::RSA)
   end
 
   it "should return a Pkey ref if the public key is requested", :pkcs11 => true do
-    @key_material_in_hardware.public_key.class.should == OpenSSL::PKey::RSA
+    expect(@key_material_in_hardware.public_key.class).to eq(OpenSSL::PKey::RSA)
   end
 
   it "should accept an ID for on-token objects", :pkcs11 => true do
-    @key_material_in_hardware.respond_to?(:token_id).should be_true
+    expect(@key_material_in_hardware.respond_to?(:token_id)).to be_truthy
   end
 
   it "should accept a path to a shared library for a PKCS11 driver", :pkcs11 => true do
-    @key_material_in_hardware.respond_to?(:pkcs11_lib).should be_true
+    expect(@key_material_in_hardware.respond_to?(:pkcs11_lib)).to be_truthy
   end
 
   it "should accept a path to OpenSSL's dynamic PKCS11 engine (provided by libengine-pkcs11-openssl)", :pkcs11 => true do
-    @key_material_in_hardware.respond_to?(:openssl_pkcs11_engine_lib).should be_true
+    expect(@key_material_in_hardware.respond_to?(:openssl_pkcs11_engine_lib)).to be_truthy
   end
 
   it "should accept an optional PIN to authenticate to the token", :pkcs11 => true do
-    @key_material_in_hardware.respond_to?(:pin).should be_true
+    expect(@key_material_in_hardware.respond_to?(:pin)).to be_truthy
   end
 
 end

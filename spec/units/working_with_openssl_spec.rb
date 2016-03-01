@@ -4,15 +4,15 @@ describe "Using OpenSSL" do
 
   shared_examples_for "an ossl issuer and its signed cert" do
     it "should issue a certificate verified by the issuer" do
-      @signed.verify(@issuer.public_key ).should be_true
+      expect(@signed.verify(@issuer.public_key )).to be_truthy
     end
 
     it "should issue a certificate with a matching issuer subject string" do
-      @signed.issuer.to_s.should == @issuer.subject.to_s
+      expect(@signed.issuer.to_s).to eq(@issuer.subject.to_s)
     end
 
     it "should issue a certificate with a matching issuer subject openssl name" do
-      @signed.issuer.should == @issuer.subject
+      expect(@signed.issuer).to eq(@issuer.subject)
     end
 
   end
@@ -78,21 +78,21 @@ describe "Using OpenSSL" do
         end
 
         it "should match the original ca's distinguished name" do
-          @our_ca.distinguished_name.to_x509_name.should == @ca.subject
+          expect(@our_ca.distinguished_name.to_x509_name).to eq(@ca.subject)
         end
 
         it "should match the original openssl ca" do
           back = OpenSSL::X509::Certificate.new(@our_ca.to_pem)
-          back.subject.should == @ca.subject
+          expect(back.subject).to eq(@ca.subject)
         end
 
         it "should match the original cert's distinguished name" do
-          @our_cert.distinguished_name.to_x509_name.should == @cert.subject
+          expect(@our_cert.distinguished_name.to_x509_name).to eq(@cert.subject)
         end
 
         it "should match the original openssl cert" do
           back = OpenSSL::X509::Certificate.new(@our_cert.to_pem)
-          back.subject.should == @cert.subject
+          expect(back.subject).to eq(@cert.subject)
         end
 
         it_should_behave_like "an ossl issuer and its signed cert"

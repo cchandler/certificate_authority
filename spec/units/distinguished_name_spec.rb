@@ -6,32 +6,32 @@ describe CertificateAuthority::DistinguishedName do
   end
 
   it "should provide the standard x.509 distinguished name common attributes" do
-    @distinguished_name.respond_to?(:cn).should be_true
-    @distinguished_name.respond_to?(:l).should be_true
-    @distinguished_name.respond_to?(:s).should be_true
-    @distinguished_name.respond_to?(:o).should be_true
-    @distinguished_name.respond_to?(:ou).should be_true
-    @distinguished_name.respond_to?(:c).should be_true
-    @distinguished_name.respond_to?(:emailAddress).should be_true
-    @distinguished_name.respond_to?(:serialNumber).should be_true
+    expect(@distinguished_name.respond_to?(:cn)).to be_truthy
+    expect(@distinguished_name.respond_to?(:l)).to be_truthy
+    expect(@distinguished_name.respond_to?(:s)).to be_truthy
+    expect(@distinguished_name.respond_to?(:o)).to be_truthy
+    expect(@distinguished_name.respond_to?(:ou)).to be_truthy
+    expect(@distinguished_name.respond_to?(:c)).to be_truthy
+    expect(@distinguished_name.respond_to?(:emailAddress)).to be_truthy
+    expect(@distinguished_name.respond_to?(:serialNumber)).to be_truthy
   end
 
   it "should provide human-readable equivalents to the distinguished name common attributes" do
-    @distinguished_name.respond_to?(:common_name).should be_true
-    @distinguished_name.respond_to?(:locality).should be_true
-    @distinguished_name.respond_to?(:state).should be_true
-    @distinguished_name.respond_to?(:organization).should be_true
-    @distinguished_name.respond_to?(:organizational_unit).should be_true
-    @distinguished_name.respond_to?(:country).should be_true
-    @distinguished_name.respond_to?(:email_address).should be_true
-    @distinguished_name.respond_to?(:serial_number).should be_true
+    expect(@distinguished_name.respond_to?(:common_name)).to be_truthy
+    expect(@distinguished_name.respond_to?(:locality)).to be_truthy
+    expect(@distinguished_name.respond_to?(:state)).to be_truthy
+    expect(@distinguished_name.respond_to?(:organization)).to be_truthy
+    expect(@distinguished_name.respond_to?(:organizational_unit)).to be_truthy
+    expect(@distinguished_name.respond_to?(:country)).to be_truthy
+    expect(@distinguished_name.respond_to?(:email_address)).to be_truthy
+    expect(@distinguished_name.respond_to?(:serial_number)).to be_truthy
   end
 
   it "should require a common name" do
-    @distinguished_name.valid?.should be_false
-    @distinguished_name.errors.size.should == 1
+    expect(@distinguished_name.valid?).to be_falsey
+    expect(@distinguished_name.errors.size).to eq(1)
     @distinguished_name.common_name = "chrischandler.name"
-    @distinguished_name.valid?.should be_true
+    expect(@distinguished_name.valid?).to be_truthy
   end
 
   it "should be convertible to an OpenSSL::X509::Name" do
@@ -47,17 +47,17 @@ describe CertificateAuthority::DistinguishedName do
     end
 
     it "should reject non Name objects" do
-      lambda { CertificateAuthority::DistinguishedName.from_openssl "Not a OpenSSL::X509::Name" }.should raise_error
+      expect { CertificateAuthority::DistinguishedName.from_openssl "Not a OpenSSL::X509::Name" }.to raise_error
     end
 
     [:common_name, :locality, :state, :country, :organization, :organizational_unit].each do |field|
       it "should set the #{field} attribute" do
-        @dn.send(field).should_not be_nil
+        expect(@dn.send(field)).not_to be_nil
       end
     end
 
     it "should create an equivalent object" do
-      @dn.to_x509_name.to_s.split('/').should =~ @name.to_s.split('/')
+      expect(@dn.to_x509_name.to_s.split('/')).to match_array(@name.to_s.split('/'))
     end
 
   end
@@ -68,7 +68,7 @@ describe CertificateAuthority::DistinguishedName do
       subject = "/testingCustomOIDs=custom/CN=justincummins.name/L=on my laptop/ST=relaxed/C=as/O=programmer/OU=using this code"
       @name = OpenSSL::X509::Name.parse subject
       @dn = CertificateAuthority::DistinguishedName.from_openssl @name
-      @dn.custom_oids?.should be_true
+      expect(@dn.custom_oids?).to be_truthy
     end
   end
 end
