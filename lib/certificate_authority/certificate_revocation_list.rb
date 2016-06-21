@@ -1,6 +1,6 @@
 module CertificateAuthority
   class CertificateRevocationList
-    include ActiveModel::Validations
+    include Validations
 
     attr_accessor :certificates
     attr_accessor :parent
@@ -8,9 +8,9 @@ module CertificateAuthority
     attr_accessor :next_update
     attr_accessor :last_update_skew_seconds
 
-    validate do |crl|
-      errors.add :next_update, "Next update must be a positive value" if crl.next_update < 0
-      errors.add :parent, "A parent entity must be set" if crl.parent.nil?
+    def validate
+      errors.add :next_update, "Next update must be a positive value" if self.next_update < 0
+      errors.add :parent, "A parent entity must be set" if self.parent.nil?
     end
 
     def initialize

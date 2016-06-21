@@ -68,7 +68,7 @@ module CertificateAuthority
 
   ## DEPRECATED
   class OCSPHandler
-    include ActiveModel::Validations
+    include Validations
 
     attr_accessor :ocsp_request
     attr_accessor :certificate_ids
@@ -78,10 +78,10 @@ module CertificateAuthority
 
     attr_accessor :ocsp_response_body
 
-    validate do |crl|
+    def validate
       errors.add :parent, "A parent entity must be set" if parent.nil?
+      all_certificates_available
     end
-    validate :all_certificates_available
 
     def initialize
       self.certificates = {}

@@ -31,13 +31,20 @@ module CertificateAuthority
       OPENSSL_IDENTIFIER = "basicConstraints"
 
       include ExtensionAPI
-      include ActiveModel::Validations
+      include Validations
 
       attr_accessor :critical
       attr_accessor :ca
       attr_accessor :path_len
-      validates :critical, :inclusion => [true,false]
-      validates :ca, :inclusion => [true,false]
+
+      def validate
+        unless [true, false].include? self.critical
+          errors.add :critical, 'must be true or false'
+        end
+        unless [true, false].include? self.ca
+          errors.add :ca, 'must be true or false'
+        end
+      end
 
       def initialize
         @critical = false
