@@ -38,7 +38,7 @@ module CertificateAuthority
 
   class MemoryKeyMaterial
     include KeyMaterial
-    include ActiveModel::Validations
+    include Validations
 
     attr_accessor :keypair
     attr_accessor :private_key
@@ -47,11 +47,13 @@ module CertificateAuthority
     def initialize
     end
 
-    validates_each :private_key do |record, attr, value|
-        record.errors.add :private_key, "cannot be blank" if record.private_key.nil?
-    end
-    validates_each :public_key do |record, attr, value|
-      record.errors.add :public_key, "cannot be blank" if record.public_key.nil?
+    def validate
+      if private_key.nil?
+        errors.add :private_key, "cannot be blank"
+      end
+      if public_key.nil?
+        errors.add :public_key, "cannot be blank"
+      end
     end
 
     def is_in_hardware?
@@ -80,10 +82,10 @@ module CertificateAuthority
 
   class SigningRequestKeyMaterial
     include KeyMaterial
-    include ActiveModel::Validations
+    include Validations
 
-    validates_each :public_key do |record, attr, value|
-      record.errors.add :public_key, "cannot be blank" if record.public_key.nil?
+    def validate
+      errors.add :public_key, "cannot be blank" if public_key.nil?
     end
 
     attr_accessor :public_key

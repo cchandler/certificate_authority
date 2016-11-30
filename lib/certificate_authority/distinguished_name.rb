@@ -1,8 +1,12 @@
 module CertificateAuthority
   class DistinguishedName
-    include ActiveModel::Validations
+    include Validations
 
-    validates_presence_of :common_name
+    def validate
+      if self.common_name.nil? || self.common_name.empty?
+        errors.add :common_name, 'cannot be blank'
+      end
+    end
 
     attr_accessor :common_name
     alias :cn :common_name

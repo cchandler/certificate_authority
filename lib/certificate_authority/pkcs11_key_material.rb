@@ -1,8 +1,6 @@
 module CertificateAuthority
   class Pkcs11KeyMaterial
     include KeyMaterial
-    include ActiveModel::Validations
-    include ActiveModel::Serialization
 
     attr_accessor :engine
     attr_accessor :token_id

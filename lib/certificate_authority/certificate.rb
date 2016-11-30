@@ -1,8 +1,6 @@
-require 'active_support/all'
-
 module CertificateAuthority
   class Certificate
-    include ActiveModel::Validations
+    include Validations
     include Revocable
 
     attr_accessor :distinguished_name
@@ -17,7 +15,7 @@ module CertificateAuthority
 
     attr_accessor :parent
 
-    validate do |certificate|
+    def validate
       errors.add :base, "Distinguished name must be valid" unless distinguished_name.valid?
       errors.add :base, "Key material must be valid" unless key_material.valid?
       errors.add :base, "Serial number must be valid" unless serial_number.valid?
@@ -34,8 +32,8 @@ module CertificateAuthority
       self.distinguished_name = DistinguishedName.new
       self.serial_number = SerialNumber.new
       self.key_material = MemoryKeyMaterial.new
-      self.not_before = Time.now.change(:min => 0).utc
-      self.not_after = Time.now.change(:min => 0).utc + 1.year
+      self.not_before = Date.today.utc
+      self.not_after = Date.today.advance(:years => 1).utc
       self.parent = self
       self.extensions = load_extensions()
 
