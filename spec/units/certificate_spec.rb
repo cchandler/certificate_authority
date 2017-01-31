@@ -7,13 +7,13 @@ describe CertificateAuthority::Certificate do
 
   describe CertificateAuthority::SigningEntity do
     it "should behave as a signing entity" do
-      @certificate.respond_to?(:is_signing_entity?).should be_true
+      expect(@certificate.respond_to?(:is_signing_entity?)).to be_truthy
     end
 
     it "should only be a signing entity if it's identified as a CA", :rfc3280 => true do
-      @certificate.is_signing_entity?.should be_false
+      expect(@certificate.is_signing_entity?).to be_falsey
       @certificate.signing_entity = true
-      @certificate.is_signing_entity?.should be_true
+      expect(@certificate.is_signing_entity?).to be_truthy
     end
 
     describe "Root certificates" do
@@ -22,15 +22,15 @@ describe CertificateAuthority::Certificate do
       end
 
       it "should be able to be identified as a root certificate" do
-        @certificate.is_root_entity?.should be_true
+        expect(@certificate.is_root_entity?).to be_truthy
       end
 
       it "should only be a root certificate if the parent entity is itself", :rfc3280 => true do
-        @certificate.parent.should == @certificate
+        expect(@certificate.parent).to eq(@certificate)
       end
 
       it "should be a root certificate by default" do
-        @certificate.is_root_entity?.should be_true
+        expect(@certificate.is_root_entity?).to be_truthy
       end
 
       it "should be able to self-sign" do
@@ -39,7 +39,7 @@ describe CertificateAuthority::Certificate do
         @certificate.key_material.generate_key(768)
         @certificate.sign!
         cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
-        cert.subject.to_s.should == cert.issuer.to_s
+        expect(cert.subject.to_s).to eq(cert.issuer.to_s)
       end
 
       it "should have the basicContraint CA:TRUE" do
@@ -48,7 +48,7 @@ describe CertificateAuthority::Certificate do
         @certificate.key_material.generate_key(768)
         @certificate.sign!
         cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
-        cert.extensions.map{|i| [i.oid,i.value] }.select{|i| i.first == "basicConstraints"}.first[1].should == "CA:TRUE"
+        expect(cert.extensions.map{|i| [i.oid,i.value] }.select{|i| i.first == "basicConstraints"}.first[1]).to eq("CA:TRUE")
       end
     end
 
@@ -65,16 +65,16 @@ describe CertificateAuthority::Certificate do
       end
 
       it "should be able to be identified as an intermediate certificate" do
-        @certificate.is_intermediate_entity?.should be_true
+        expect(@certificate.is_intermediate_entity?).to be_truthy
       end
 
       it "should not be identified as a root" do
-        @certificate.is_root_entity?.should be_false
+        expect(@certificate.is_root_entity?).to be_falsey
       end
 
       it "should only be an intermediate certificate if the parent is a different entity" do
-        @certificate.parent.should_not == @certificate
-        @certificate.parent.should_not be_nil
+        expect(@certificate.parent).not_to eq(@certificate)
+        expect(@certificate.parent).not_to be_nil
       end
 
       it "should correctly be signed by a parent certificate" do
@@ -84,7 +84,7 @@ describe CertificateAuthority::Certificate do
         @certificate.serial_number.number = 1
         @certificate.sign!
         cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
-        cert.subject.to_s.should_not == cert.issuer.to_s
+        expect(cert.subject.to_s).not_to eq(cert.issuer.to_s)
       end
 
       it "should have the basicContraint CA:TRUE" do
@@ -94,7 +94,7 @@ describe CertificateAuthority::Certificate do
         @certificate.serial_number.number = 3
         @certificate.sign!
         cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
-        cert.extensions.map{|i| [i.oid,i.value] }.select{|i| i.first == "basicConstraints"}.first[1].should == "CA:TRUE"
+        expect(cert.extensions.map{|i| [i.oid,i.value] }.select{|i| i.first == "basicConstraints"}.first[1]).to eq("CA:TRUE")
       end
 
     end
@@ -111,11 +111,11 @@ describe CertificateAuthority::Certificate do
       end
 
       it "should not be identified as an intermediate certificate" do
-        @certificate.is_intermediate_entity?.should be_false
+        expect(@certificate.is_intermediate_entity?).to be_falsey
       end
 
       it "should not be identified as a root" do
-        @certificate.is_root_entity?.should be_false
+        expect(@certificate.is_root_entity?).to be_falsey
       end
 
       it "should have the basicContraint CA:FALSE" do
@@ -125,13 +125,13 @@ describe CertificateAuthority::Certificate do
         @certificate.serial_number.number = 1
         @certificate.sign!
         cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
-        cert.extensions.map{|i| [i.oid,i.value] }.select{|i| i.first == "basicConstraints"}.first[1].should == "CA:FALSE"
+        expect(cert.extensions.map{|i| [i.oid,i.value] }.select{|i| i.first == "basicConstraints"}.first[1]).to eq("CA:FALSE")
       end
     end
 
 
     it "should be able to be identified as a root certificate" do
-      @certificate.respond_to?(:is_root_entity?).should be_true
+      expect(@certificate.respond_to?(:is_root_entity?)).to be_truthy
     end
   end #End of SigningEntity
 
@@ -145,8 +145,8 @@ describe CertificateAuthority::Certificate do
     end
 
     it "should have a PEM encoded certificate body available" do
-      @certificate.to_pem.should_not be_nil
-      OpenSSL::X509::Certificate.new(@certificate.to_pem).should_not be_nil
+      expect(@certificate.to_pem).not_to be_nil
+      expect(OpenSSL::X509::Certificate.new(@certificate.to_pem)).not_to be_nil
     end
   end
 
@@ -182,13 +182,13 @@ describe CertificateAuthority::Certificate do
       it "should have a subjectAltName if specified" do
         @certificate.sign!({"extensions" => {"subjectAltName" => {"uris" => ["www.chrischandler.name"]}}})
         cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
-        cert.extensions.map(&:oid).include?("subjectAltName").should be_true
+        expect(cert.extensions.map(&:oid).include?("subjectAltName")).to be_truthy
       end
 
       it "should NOT have a subjectAltName if one was not specified" do
         @certificate.sign!
         cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
-        cert.extensions.map(&:oid).include?("subjectAltName").should be_false
+        expect(cert.extensions.map(&:oid).include?("subjectAltName")).to be_falsey
       end
 
       it 'should replace email:copy with email address' do
@@ -198,7 +198,7 @@ describe CertificateAuthority::Certificate do
         )
         cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
         alt = cert.extensions.select { |e| e.oid == 'subjectAltName' }.first
-        alt.value.should == 'email:foo@bar.com, email:fubar@bar.com'
+        expect(alt.value).to eq('email:foo@bar.com, email:fubar@bar.com')
       end
     end
 
@@ -213,7 +213,7 @@ describe CertificateAuthority::Certificate do
       it "should have an authority info access if specified" do
         @certificate.sign!({"extensions" => {"authorityInfoAccess" => {"ocsp" => ["www.chrischandler.name"]}}})
         cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
-        cert.extensions.map(&:oid).include?("authorityInfoAccess").should be_true
+        expect(cert.extensions.map(&:oid).include?("authorityInfoAccess")).to be_truthy
       end
     end
 
@@ -228,13 +228,13 @@ describe CertificateAuthority::Certificate do
       it "should have a crlDistributionPoint if specified" do
         @certificate.sign!({"extensions" => {"crlDistributionPoints" => {"uris" => ["http://crlThingy.com"]}}})
         cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
-        cert.extensions.map(&:oid).include?("crlDistributionPoints").should be_true
+        expect(cert.extensions.map(&:oid).include?("crlDistributionPoints")).to be_truthy
       end
 
       it "should NOT have a crlDistributionPoint if one was not specified" do
         @certificate.sign!
         cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
-        cert.extensions.map(&:oid).include?("crlDistributionPoints").should be_false
+        expect(cert.extensions.map(&:oid).include?("crlDistributionPoints")).to be_falsey
       end
     end
 
@@ -257,7 +257,7 @@ describe CertificateAuthority::Certificate do
           }
         })
         cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
-        cert.extensions.map(&:oid).include?("certificatePolicies").should be_true
+        expect(cert.extensions.map(&:oid).include?("certificatePolicies")).to be_truthy
       end
 
       pending "should contain a nested userNotice if specified" do
@@ -274,12 +274,12 @@ describe CertificateAuthority::Certificate do
            }
          })
          cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
-         cert.extensions.map(&:oid).include?("certificatePolicies").should be_true
+         expect(cert.extensions.map(&:oid).include?("certificatePolicies")).to be_truthy
          ## Checking OIDs after they've run through OpenSSL is a pain...
          ## The nicely structured data will be flattened to a single String
          cert.extensions.each do |ext|
            if ext.oid == "certificatePolicies"
-             ext.to_a[1].should include("Testing explicit text!")
+             expect(ext.to_a[1]).to include("Testing explicit text!")
            end
          end
       end
@@ -287,41 +287,41 @@ describe CertificateAuthority::Certificate do
       it "should NOT include a certificatePolicy if not specified" do
         @certificate.sign!
         cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
-        cert.extensions.map(&:oid).include?("certificatePolicies").should be_false
+        expect(cert.extensions.map(&:oid).include?("certificatePolicies")).to be_falsey
       end
     end
 
 
     it "should support BasicConstraints" do
       cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
-      cert.extensions.map(&:oid).include?("basicConstraints").should be_true
+      expect(cert.extensions.map(&:oid).include?("basicConstraints")).to be_truthy
     end
 
     it "should support subjectKeyIdentifier" do
       cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
-      cert.extensions.map(&:oid).include?("subjectKeyIdentifier").should be_true
+      expect(cert.extensions.map(&:oid).include?("subjectKeyIdentifier")).to be_truthy
     end
 
     it "should support authorityKeyIdentifier" do
       cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
-      cert.extensions.map(&:oid).include?("authorityKeyIdentifier").should be_true
+      expect(cert.extensions.map(&:oid).include?("authorityKeyIdentifier")).to be_truthy
     end
 
     it "should order subjectKeyIdentifier before authorityKeyIdentifier" do
       cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
-      cert.extensions.map(&:oid).select do |oid|
+      expect(cert.extensions.map(&:oid).select do |oid|
         ["subjectKeyIdentifier", "authorityKeyIdentifier"].include?(oid)
-      end.should == ["subjectKeyIdentifier", "authorityKeyIdentifier"]
+      end).to eq(["subjectKeyIdentifier", "authorityKeyIdentifier"])
     end
 
     it "should support keyUsage" do
       cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
-      cert.extensions.map(&:oid).include?("keyUsage").should be_true
+      expect(cert.extensions.map(&:oid).include?("keyUsage")).to be_truthy
     end
 
     it "should support extendedKeyUsage" do
       cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
-      cert.extensions.map(&:oid).include?("extendedKeyUsage").should be_true
+      expect(cert.extensions.map(&:oid).include?("extendedKeyUsage")).to be_truthy
     end
   end
 
@@ -358,14 +358,14 @@ describe CertificateAuthority::Certificate do
     it "should support a default signing digest of SHA512" do
       @certificate.sign!(@signing_profile)
       cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
-      cert.signature_algorithm.should == "sha512WithRSAEncryption"
+      expect(cert.signature_algorithm).to eq("sha512WithRSAEncryption")
     end
 
     it "should support a configurable digest algorithm" do
       @signing_profile.merge!({"digest" => "SHA1"})
       @certificate.sign!(@signing_profile)
       cert = OpenSSL::X509::Certificate.new(@certificate.to_pem)
-      cert.signature_algorithm.should == "sha1WithRSAEncryption"
+      expect(cert.signature_algorithm).to eq("sha1WithRSAEncryption")
     end
 
   end
@@ -393,13 +393,13 @@ CERT
     end
 
     it "should reject non-Certificate arguments" do
-      lambda { CertificateAuthority::Certificate.from_openssl "a string" }.should raise_error
+      expect { CertificateAuthority::Certificate.from_openssl "a string" }.to raise_error
     end
 
     it "should only be missing a private key" do
-      @small_cert.should_not be_valid
+      expect(@small_cert).not_to be_valid
       @small_cert.key_material.private_key = "data"
-      @small_cert.should be_valid
+      expect(@small_cert).to be_valid
     end
 
     it "should check to make sure that if a certificate had extensions they were imported" do
@@ -410,28 +410,28 @@ CERT
       expected_basicConstraints = CertificateAuthority::Extensions::BasicConstraints.new
       expected_basicConstraints.critical = true
       expected_basicConstraints.ca = false
-      @cert_with_extensions.extensions["basicConstraints"].should == expected_basicConstraints
+      expect(@cert_with_extensions.extensions["basicConstraints"]).to eq(expected_basicConstraints)
 
       expected_crlDistributionPoints = CertificateAuthority::Extensions::CrlDistributionPoints.new
       expected_crlDistributionPoints.uris = ["http://crl3.digicert.com/ev2009a.crl","http://crl4.digicert.com/ev2009a.crl"]
-      @cert_with_extensions.extensions["crlDistributionPoints"].should == expected_crlDistributionPoints
+      expect(@cert_with_extensions.extensions["crlDistributionPoints"]).to eq(expected_crlDistributionPoints)
 
       expected_subjectAlt = CertificateAuthority::Extensions::SubjectAlternativeName.new
       expected_subjectAlt.dns_names =["github.com", "www.github.com"]
-      @cert_with_extensions.extensions["subjectAltName"].should == expected_subjectAlt
+      expect(@cert_with_extensions.extensions["subjectAltName"]).to eq(expected_subjectAlt)
 
       expected_subjectKeyIdentifier = CertificateAuthority::Extensions::SubjectKeyIdentifier.new
       expected_subjectKeyIdentifier.identifier = "87:D1:8F:19:6E:E4:87:6F:53:8C:77:91:07:50:DF:A3:BF:55:47:20"
-      @cert_with_extensions.extensions["subjectKeyIdentifier"].should == expected_subjectKeyIdentifier
+      expect(@cert_with_extensions.extensions["subjectKeyIdentifier"]).to eq(expected_subjectKeyIdentifier)
 
       expected_authorityKeyIdentifier = CertificateAuthority::Extensions::AuthorityKeyIdentifier.new
       expected_authorityKeyIdentifier.identifier = "keyid:4C:58:CB:25:F0:41:4F:52:F4:28:C8:81:43:9B:A6:A8:A0:E6:92:E5"
-      @cert_with_extensions.extensions["authorityKeyIdentifier"].should == expected_authorityKeyIdentifier
+      expect(@cert_with_extensions.extensions["authorityKeyIdentifier"]).to eq(expected_authorityKeyIdentifier)
 
       expected_authorityInfoAccess = CertificateAuthority::Extensions::AuthorityInfoAccess.new
       expected_authorityInfoAccess.ocsp << "URI:http://ocsp.digicert.com"
       expected_authorityInfoAccess.ca_issuers << "URI:http://www.digicert.com/CACerts/DigiCertHighAssuranceEVCA-1.crt"
-      @cert_with_extensions.extensions["authorityInfoAccess"].should == expected_authorityInfoAccess
+      expect(@cert_with_extensions.extensions["authorityInfoAccess"]).to eq(expected_authorityInfoAccess)
 
       expected_keyUsage = CertificateAuthority::Extensions::KeyUsage.new
       expected_keyUsage.critical = true
@@ -439,54 +439,54 @@ CERT
       # it will parse and return 'Digital Signature' even though those should
       # be identical.
       expected_keyUsage.usage = ["Digital Signature", "Key Encipherment"]
-      @cert_with_extensions.extensions["keyUsage"].should == expected_keyUsage
+      expect(@cert_with_extensions.extensions["keyUsage"]).to eq(expected_keyUsage)
 
       expected_extendedKeyUsage = CertificateAuthority::Extensions::ExtendedKeyUsage.new
       # Same asymmetric specify vs parse as above
       expected_extendedKeyUsage.usage = ["TLS Web Server Authentication", "TLS Web Client Authentication"]
-      @cert_with_extensions.extensions["extendedKeyUsage"].should == expected_extendedKeyUsage
+      expect(@cert_with_extensions.extensions["extendedKeyUsage"]).to eq(expected_extendedKeyUsage)
     end
   end
 
   it "should have a distinguished name" do
-    @certificate.distinguished_name.should_not be_nil
+    expect(@certificate.distinguished_name).not_to be_nil
   end
 
   it "should have a serial number" do
-    @certificate.serial_number.should_not be_nil
+    expect(@certificate.serial_number).not_to be_nil
   end
 
   it "should have a subject" do
-    @certificate.subject.should_not be_nil
+    expect(@certificate.subject).not_to be_nil
   end
 
   it "should be able to have a parent entity" do
-    @certificate.respond_to?(:parent).should be_true
+    expect(@certificate.respond_to?(:parent)).to be_truthy
   end
 
   it "should have key material" do
-    @certificate.key_material.should_not be_nil
+    expect(@certificate.key_material).not_to be_nil
   end
 
   it "should have a not_before field" do
-    @certificate.not_before.should_not be_nil
+    expect(@certificate.not_before).not_to be_nil
   end
 
   it "should have a not_after field" do
-    @certificate.not_after.should_not be_nil
+    expect(@certificate.not_after).not_to be_nil
   end
 
   it "should default to one year validity" do
     day  = 60 * 60 * 24
     year = day * 365
-    @certificate.not_after.should < Time.now + year + day and
-    @certificate.not_after.should > Time.now + year - day
+    expect(@certificate.not_after).to be < Time.now + year + day and
+    expect(@certificate.not_after).to be > Time.now + year - day
   end
 
   it "should be able to have a revoked at time" do
-    @certificate.revoked?.should be_false
+    expect(@certificate.revoked?).to be_falsey
     @certificate.revoked_at = Time.now.utc
-    @certificate.revoked?.should be_true
+    expect(@certificate.revoked?).to be_truthy
   end
 
 end
