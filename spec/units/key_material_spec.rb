@@ -85,7 +85,7 @@ EOF
     it "should raise an exception if you read an encrypted keypair w/ bad password" do
       expect {
         key = CertificateAuthority::KeyMaterial.from_x509_key_pair(@encrypted_key_pair,"wrong")
-      }.to raise_error
+      }.to raise_error(OpenSSL::PKey::RSAError)
     end
 
     it "should include a means of reading a public-only PEM formatted key" do
@@ -174,6 +174,6 @@ CSR
   it "should raise when signature does not verify" do
     invalid = @request
     invalid.public_key = OpenSSL::PKey::RSA.new 512
-    expect { CertificateAuthority::SigningRequestKeyMaterial.new invalid }.to raise_error
+    expect { CertificateAuthority::SigningRequestKeyMaterial.new invalid }.to raise_error(RuntimeError)
   end
 end

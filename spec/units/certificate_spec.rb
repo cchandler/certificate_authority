@@ -393,7 +393,7 @@ CERT
     end
 
     it "should reject non-Certificate arguments" do
-      expect { CertificateAuthority::Certificate.from_openssl "a string" }.to raise_error
+      expect { CertificateAuthority::Certificate.from_openssl "a string" }.to raise_error(RuntimeError)
     end
 
     it "should only be missing a private key" do

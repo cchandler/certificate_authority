@@ -150,7 +150,7 @@ describe CertificateAuthority::OCSPHandler do
   it "should raise an error if you try and extract certificates without a raw request" do
     @ocsp_handler.extract_certificate_serials
     @ocsp_handler.ocsp_request = nil
-    expect {@ocsp_handler.extract_certificate_serials}.to raise_error
+    expect {@ocsp_handler.extract_certificate_serials}.to raise_error(RuntimeError)
   end
 
   it "should return a hash of extracted certificates from OCSP requests" do
@@ -174,7 +174,7 @@ describe CertificateAuthority::OCSPHandler do
     @ocsp_handler.extract_certificate_serials
     @ocsp_handler << @certificate
     @ocsp_handler.parent = @root_certificate
-    expect { @ocsp_handler.to_der }.to raise_error
+    expect { @ocsp_handler.to_der }.to raise_error(RuntimeError)
     @ocsp_handler.response
     expect(@ocsp_handler.to_der).not_to be_nil
   end
@@ -182,13 +182,13 @@ describe CertificateAuthority::OCSPHandler do
   it "should raise an error if you generate a response without adding all certificates in request" do
     @ocsp_handler.extract_certificate_serials
     @ocsp_handler.parent = @root_certificate
-    expect { @ocsp_handler.response }.to raise_error
+    expect { @ocsp_handler.response }.to raise_error(RuntimeError)
   end
 
   it "should raise an error if you generate a response without adding a parent signing entity" do
     @ocsp_handler.extract_certificate_serials
     @ocsp_handler << @certificate
-    expect { @ocsp_handler.response }.to raise_error
+    expect { @ocsp_handler.response }.to raise_error(RuntimeError)
   end
 
   describe "Response" do

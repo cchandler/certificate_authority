@@ -16,9 +16,9 @@ describe CertificateAuthority::Extensions do
 
     it "should raise an error if :path_len isn't a non-negative integer" do
       basic_constraints = CertificateAuthority::Extensions::BasicConstraints.new
-      expect {basic_constraints.path_len = "moo"}.to raise_error
-      expect {basic_constraints.path_len = -1}.to raise_error
-      expect {basic_constraints.path_len = 1.5}.to raise_error
+      expect {basic_constraints.path_len = "moo"}.to raise_error(ArgumentError)
+      expect {basic_constraints.path_len = -1}.to raise_error(RuntimeError)
+      expect {basic_constraints.path_len = 1.5}.to raise_error(RuntimeError)
     end
 
     it "should generate a proper OpenSSL extension string" do
@@ -44,7 +44,7 @@ describe CertificateAuthority::Extensions do
 
     it "should require 'uris' to be an Array" do
       subjectAltName = CertificateAuthority::Extensions::SubjectAlternativeName.new
-      expect {subjectAltName.uris = "not an array"}.to raise_error
+      expect {subjectAltName.uris = "not an array"}.to raise_error(RuntimeError)
     end
 
     it "should generate a proper OpenSSL extension string for URIs" do
@@ -71,7 +71,7 @@ describe CertificateAuthority::Extensions do
 
     it "should require 'dns_names' to be an Array" do
       subjectAltName = CertificateAuthority::Extensions::SubjectAlternativeName.new
-      expect {subjectAltName.dns_names = "not an array"}.to raise_error
+      expect {subjectAltName.dns_names = "not an array"}.to raise_error(RuntimeError)
     end
 
     it "should generate a proper OpenSSL extension string for DNS names" do
@@ -98,7 +98,7 @@ describe CertificateAuthority::Extensions do
 
     it "should require 'ips' to be an Array" do
       subjectAltName = CertificateAuthority::Extensions::SubjectAlternativeName.new
-      expect {subjectAltName.ips = "not an array"}.to raise_error
+      expect {subjectAltName.ips = "not an array"}.to raise_error(RuntimeError)
     end
 
     it "should generate a proper OpenSSL extension string for IPs" do

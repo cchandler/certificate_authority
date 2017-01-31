@@ -32,7 +32,7 @@ describe CertificateAuthority::CertificateRevocationList do
 
   it "should complain if you add a certificate without a revocation time" do
     @certificate.revoked_at = nil
-    expect{ @crl << @certificate}.to raise_error
+    expect{ @crl << @certificate}.to raise_error(RuntimeError)
   end
 
   it "should have a 'parent' that will be responsible for signing" do
@@ -42,12 +42,12 @@ describe CertificateAuthority::CertificateRevocationList do
 
   it "should raise an error if you try and sign a CRL without attaching a parent" do
     @crl.parent = nil
-    expect { @crl.sign! }.to raise_error
+    expect { @crl.sign! }.to raise_error(RuntimeError)
   end
 
   it "should be able to generate a proper CRL" do
     @crl << @certificate
-    expect {@crl.to_pem}.to raise_error
+    expect {@crl.to_pem}.to raise_error(RuntimeError)
     @crl.parent = @root_certificate
     @crl.sign!
     expect(@crl.to_pem).not_to be_nil
@@ -119,7 +119,7 @@ describe CertificateAuthority::CertificateRevocationList do
     it "should throw an error if we try and sign up with a negative next_update" do
       @crl.sign!
       @crl.next_update = - (60 * 60 * 10)
-      expect{@crl.sign!}.to raise_error
+      expect{@crl.sign!}.to raise_error(RuntimeError)
     end
   end
 end

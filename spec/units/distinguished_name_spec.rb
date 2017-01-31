@@ -47,7 +47,7 @@ describe CertificateAuthority::DistinguishedName do
     end
 
     it "should reject non Name objects" do
-      expect { CertificateAuthority::DistinguishedName.from_openssl "Not a OpenSSL::X509::Name" }.to raise_error
+      expect { CertificateAuthority::DistinguishedName.from_openssl "Not a OpenSSL::X509::Name" }.to raise_error(RuntimeError)
     end
 
     [:common_name, :locality, :state, :country, :organization, :organizational_unit].each do |field|

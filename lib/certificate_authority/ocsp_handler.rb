@@ -94,6 +94,9 @@ module CertificateAuthority
     def extract_certificate_serials
       openssl_request = OpenSSL::OCSP::Request.new(@ocsp_request)
 
+      if openssl_request.certid.nil?
+        raise "Invalid openssl request"
+      end
       self.certificate_ids = openssl_request.certid.collect do |cert_id|
         cert_id.serial
       end
