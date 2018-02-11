@@ -122,7 +122,21 @@ EOF
     end
 
     it "should generate a CSR" do
-      expected =<<EOF
+      if RUBY_VERSION >= '2.5.0'
+        expected =<<EOF
+-----BEGIN CERTIFICATE REQUEST-----
+MIIBUzCBvQIBADAUMRIwEAYDVQQDDAlsb2NhbGhvc3QwgZ8wDQYJKoZIhvcNAQEB
+BQADgY0AMIGJAoGBALGIZV9Gt/3QIea9dr5dhYTibstnWyVzpzEhjIiBm5DlPwB6
+pRqRvJhjjAxRHaBnikM+z9Yazx9brqrbeqYdKvVtDodovzOdsPtQv8iKLKJbwjXW
+ituuGKYjHUDrTqqLz/SBBz4fznWDNS6x3nGAo/Zf6g/FjHdUbd2mSwuc0rUjAgMB
+AAGgADANBgkqhkiG9w0BAQ0FAAOBgQANCCSnS9L5tUZrtysGF+uP+eSc6O76jRbL
+9XueRH57ZIddHm/z3xK/01IjyKVlLK7azlL187K1JZwBCwREhodBRULoQJGumhRT
+qh9RuoJtuzEmviAYN1uYQ1mpmN/LtseP8PkP7S3MzJK1SSdI7929EhWfJo4Zrm0+
+gPav58ePPg==
+-----END CERTIFICATE REQUEST-----
+EOF
+      else
+        expected =<<EOF
 -----BEGIN CERTIFICATE REQUEST-----
 MIIBUTCBuwIBADAUMRIwEAYDVQQDDAlsb2NhbGhvc3QwgZ8wDQYJKoZIhvcNAQEB
 BQADgY0AMIGJAoGBALGIZV9Gt/3QIea9dr5dhYTibstnWyVzpzEhjIiBm5DlPwB6
@@ -134,6 +148,7 @@ XBlLOqVQmWR7YfwPc8CxclIYt1+HyCmBndXIDvGR0JO8/lEdSObZQYHV197hWOay
 reDW940=
 -----END CERTIFICATE REQUEST-----
 EOF
+      end
       expect(@csr.to_pem).to eq(expected)
     end
 
