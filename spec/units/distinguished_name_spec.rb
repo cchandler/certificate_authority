@@ -1,5 +1,3 @@
-require File.dirname(__FILE__) + '/units_helper'
-
 describe CertificateAuthority::DistinguishedName do
   before(:each) do
     @distinguished_name = CertificateAuthority::DistinguishedName.new

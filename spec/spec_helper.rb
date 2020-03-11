@@ -1,14 +1,15 @@
 require 'rubygems'
-require 'rspec'
+require 'bundler/setup'
+require 'certificate_authority'
 require 'pathname'
+require 'pry'
 
 require 'coveralls'
 Coveralls.wear!
 
-SPECDIR = Pathname(__FILE__).dirname
-require SPECDIR.join('..', 'lib', 'certificate_authority').to_s
+SAMPLES_DIR = Pathname.new(__dir__).join('samples').freeze
 
 def sample_file(name)
-  SPECDIR.join("samples", name)
+  SAMPLES_DIR.join(name)
 end
 

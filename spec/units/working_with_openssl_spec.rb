@@ -1,7 +1,4 @@
-require File.dirname(__FILE__) + '/units_helper'
-
 describe "Using OpenSSL" do
-
   shared_examples_for "an ossl issuer and its signed cert" do
     it "should issue a certificate verified by the issuer" do
       expect(@signed.verify(@issuer.public_key )).to be_truthy

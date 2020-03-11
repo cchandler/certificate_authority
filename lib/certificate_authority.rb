@@ -1,9 +1,7 @@
-$:.unshift(File.dirname(__FILE__)) unless $:.include?(File.dirname(__FILE__)) || $:.include?(File.expand_path(File.dirname(__FILE__)))
-
-#Exterior requirements
+# Exterior requirements
 require 'openssl'
 
-#Internal modules
+# Internal modules
 require 'certificate_authority/core_extensions'
 require 'certificate_authority/signing_entity'
 require 'certificate_authority/revocable'

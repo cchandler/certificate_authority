@@ -1,5 +1,3 @@
-require File.dirname(__FILE__) + '/units_helper'
-
 ## Anything that requires crypto hardware needs to be tagged as 'pkcs11'
 describe CertificateAuthority::Pkcs11KeyMaterial, :pkcs11 => true do
   before(:each) do
@@ -37,5 +35,4 @@ describe CertificateAuthority::Pkcs11KeyMaterial, :pkcs11 => true do
   it "should accept an optional PIN to authenticate to the token", :pkcs11 => true do
     expect(@key_material_in_hardware.respond_to?(:pin)).to be_truthy
   end
-
 end

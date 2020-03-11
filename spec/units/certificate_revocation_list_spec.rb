@@ -1,5 +1,3 @@
-require File.dirname(__FILE__) + '/units_helper'
-
 describe CertificateAuthority::CertificateRevocationList do
   before(:each) do
     @crl = CertificateAuthority::CertificateRevocationList.new

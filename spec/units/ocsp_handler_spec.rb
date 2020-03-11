@@ -1,5 +1,3 @@
-require File.dirname(__FILE__) + '/units_helper'
-
 describe CertificateAuthority::OCSPRequestReader do
   before(:each) do
     @root_certificate = CertificateAuthority::Certificate.new

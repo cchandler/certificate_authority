@@ -60,7 +60,7 @@ module CertificateAuthority
       end
 
       def path_len=(value)
-        raise "path_len must be a non-negative integer" if value < 0 or !value.is_a?(Fixnum)
+        fail(ArgumentError, "path_len must be a non-negative integer") if !value.is_a?(Integer) || value < 0
         @path_len = value
       end
 

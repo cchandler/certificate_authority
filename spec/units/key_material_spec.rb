@@ -1,5 +1,3 @@
-require File.dirname(__FILE__) + '/units_helper'
-
 describe CertificateAuthority::KeyMaterial do
   [CertificateAuthority::MemoryKeyMaterial, CertificateAuthority::SigningRequestKeyMaterial].each do |key_material_class|
     before do
