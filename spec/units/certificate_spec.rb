@@ -1,5 +1,3 @@
-require File.dirname(__FILE__) + '/units_helper'
-
 describe CertificateAuthority::Certificate do
   before(:each) do
     @certificate = CertificateAuthority::Certificate.new

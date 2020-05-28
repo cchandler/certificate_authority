@@ -1,5 +1,3 @@
-require File.dirname(__FILE__) + '/units_helper'
-
 describe CertificateAuthority::SigningRequest do
   before(:each) do
     @pem_csr =<<EOF

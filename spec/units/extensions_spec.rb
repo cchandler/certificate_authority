@@ -1,5 +1,3 @@
-require File.dirname(__FILE__) + '/units_helper'
-
 describe CertificateAuthority::Extensions do
   describe CertificateAuthority::Extensions::BasicConstraints do
     it "should only allow true/false" do
@@ -17,8 +15,8 @@ describe CertificateAuthority::Extensions do
     it "should raise an error if :path_len isn't a non-negative integer" do
       basic_constraints = CertificateAuthority::Extensions::BasicConstraints.new
       expect {basic_constraints.path_len = "moo"}.to raise_error(ArgumentError)
-      expect {basic_constraints.path_len = -1}.to raise_error(RuntimeError)
-      expect {basic_constraints.path_len = 1.5}.to raise_error(RuntimeError)
+      expect {basic_constraints.path_len = -1}.to raise_error(ArgumentError)
+      expect {basic_constraints.path_len = 1.5}.to raise_error(ArgumentError)
     end
 
     it "should generate a proper OpenSSL extension string" do
