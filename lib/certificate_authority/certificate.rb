@@ -75,11 +75,6 @@ module CertificateAuthority
       openssl_cert.subject = self.distinguished_name.to_x509_name
       openssl_cert.issuer = parent.distinguished_name.to_x509_name
 
-      require 'tempfile'
-      t = Tempfile.new("bullshit_conf")
-      ## The config requires a file even though we won't use it
-      openssl_config = OpenSSL::Config.new(t.path)
-
       factory = OpenSSL::X509::ExtensionFactory.new
       factory.subject_certificate = openssl_cert
 
@@ -90,14 +85,7 @@ module CertificateAuthority
         factory.issuer_certificate = parent.openssl_body
       end
 
-      self.extensions.keys.each do |k|
-        config_extensions = extensions[k].config_extensions
-        openssl_config = merge_options(openssl_config,config_extensions)
-      end
-
-      # p openssl_config.sections
-
-      factory.config = openssl_config
+      factory.config = build_openssl_config
 
       # Order matters: e.g. for self-signed, subjectKeyIdentifier must come before authorityKeyIdentifier
       self.extensions.keys.sort{|a,b| b<=>a}.each do |k|
@@ -114,8 +102,6 @@ module CertificateAuthority
       end
 
       self.openssl_body = openssl_cert.sign(parent.key_material.private_key, digest)
-    ensure
-      t.close! if t # We can get rid of the ridiculous temp file
     end
 
     def is_signing_entity?
@@ -222,6 +208,55 @@ module CertificateAuthority
       end
 
       extension_hash
+    end
+
+    def build_openssl_config
+      OpenSSL::Config.parse(openssl_config_string)
+    end
+
+    def openssl_config_string
+      lines = openssl_config_without_multi_value + openssl_config_with_multi_value
+      return '' if lines.empty?
+      (["[extensions]" ]+ lines).join("\n")
+    end
+
+    def openssl_config_without_multi_value
+      no_multi_value_keys = self.extensions.keys.select { |k| extensions[k].config_extensions.empty? }
+
+      lines = no_multi_value_keys.map do |k|
+        value = extensions[k].to_s
+        value.empty? ? '' : "#{k} = #{value}"
+      end.reject(&:empty?)
+      lines
+    end
+
+    def openssl_config_with_multi_value
+      multi_value_keys = self.extensions.keys.reject { |k| extensions[k].config_extensions.empty? }
+      sections = {}
+
+      entries = multi_value_keys.map do |k|
+        sections.merge!(extensions[k].config_extensions)
+        value = comma_terminate(extensions[k]) + section_ref_str(extensions[k].config_extensions.keys)
+        "#{k} = #{value}"
+      end.reject(&:empty?)
+
+      section_lines = sections.keys.flat_map do |k|
+        section_lines(k, sections[k])
+      end 
+      entries + [''] + section_lines
+    end
+
+    def comma_terminate(val)
+      s = val.to_s
+      s.empty? ? s : "#{s},"
+    end
+
+    def section_ref_str(section_names)
+      section_names.map { |n| "@#{n}"}.join(',')
+    end
+
+    def section_lines(section_name, value_hash)
+      ["[#{section_name}]"] + value_hash.keys.map { |k| "#{k} = #{value_hash[k]}"} + ['']
     end
 
     def merge_options(config,hash)
