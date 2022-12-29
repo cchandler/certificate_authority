@@ -423,7 +423,8 @@ CERT
       expect(@cert_with_extensions.extensions["subjectKeyIdentifier"]).to eq(expected_subjectKeyIdentifier)
 
       expected_authorityKeyIdentifier = CertificateAuthority::Extensions::AuthorityKeyIdentifier.new
-      expected_authorityKeyIdentifier.identifier = "keyid:4C:58:CB:25:F0:41:4F:52:F4:28:C8:81:43:9B:A6:A8:A0:E6:92:E5"
+      keyid_prefix = Gem::Version.new(OpenSSL::VERSION) >= Gem::Version.new('3') ? '' : 'keyid:'
+      expected_authorityKeyIdentifier.identifier = "#{keyid_prefix}4C:58:CB:25:F0:41:4F:52:F4:28:C8:81:43:9B:A6:A8:A0:E6:92:E5"
       expect(@cert_with_extensions.extensions["authorityKeyIdentifier"]).to eq(expected_authorityKeyIdentifier)
 
       expected_authorityInfoAccess = CertificateAuthority::Extensions::AuthorityInfoAccess.new
