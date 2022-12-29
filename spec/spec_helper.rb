@@ -2,7 +2,6 @@ require 'rubygems'
 require 'bundler/setup'
 require 'certificate_authority'
 require 'pathname'
-require 'pry'
 
 require 'coveralls'
 Coveralls.wear!
